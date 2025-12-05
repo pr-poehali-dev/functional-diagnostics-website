@@ -26,11 +26,23 @@ type Parameter = {
   normalRange: { min: number; max: number };
 };
 
+type PatientData = {
+  name: string;
+  gender: 'male' | 'female' | '';
+  birthDate: string;
+  age?: number;
+  weight: string;
+  height: string;
+  bsa?: number;
+  studyDate: string;
+};
+
 type Protocol = {
   id: string;
   studyType: string;
   date: string;
   patientName: string;
+  patientData: PatientData;
   results: Record<string, number>;
   conclusion: string;
 };
@@ -76,10 +88,50 @@ const studyTypes: StudyType[] = [
 
 const Index = () => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const [patientName, setPatientName] = useState('');
+  const [patientData, setPatientData] = useState<PatientData>({
+    name: '',
+    gender: '',
+    birthDate: '',
+    weight: '',
+    height: '',
+    studyDate: new Date().toISOString().split('T')[0],
+  });
   const [parameters, setParameters] = useState<Record<string, string>>({});
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [activeTab, setActiveTab] = useState('home');
+
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculateBSA = (weight: number, height: number): number => {
+    if (!weight || !height) return 0;
+    return Math.sqrt((weight * height) / 3600);
+  };
+
+  const handlePatientDataChange = (field: keyof PatientData, value: string) => {
+    const newData = { ...patientData, [field]: value };
+    
+    if (field === 'birthDate') {
+      newData.age = calculateAge(value);
+    }
+    
+    if (field === 'weight' || field === 'height') {
+      const weight = field === 'weight' ? parseFloat(value) : parseFloat(patientData.weight);
+      const height = field === 'height' ? parseFloat(value) : parseFloat(patientData.height);
+      newData.bsa = calculateBSA(weight, height);
+    }
+    
+    setPatientData(newData);
+  };
 
   const handleParameterChange = (id: string, value: string) => {
     setParameters({ ...parameters, [id]: value });
@@ -116,8 +168,8 @@ const Index = () => {
   };
 
   const handleGenerateProtocol = () => {
-    if (!selectedStudy || !patientName || Object.keys(parameters).length === 0) {
-      toast.error('Заполните все поля');
+    if (!selectedStudy || !patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0) {
+      toast.error('Заполните все обязательные поля');
       return;
     }
 
@@ -133,7 +185,8 @@ const Index = () => {
       id: Date.now().toString(),
       studyType: selectedStudy.name,
       date: new Date().toLocaleString('ru-RU'),
-      patientName,
+      patientName: patientData.name,
+      patientData: { ...patientData },
       results,
       conclusion: generateConclusion(),
     };
@@ -152,15 +205,28 @@ const Index = () => {
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text(`Тип исследования: ${protocol.studyType}`, 20, 40);
-    pdf.text(`Пациент: ${protocol.patientName}`, 20, 50);
-    pdf.text(`Дата: ${protocol.date}`, 20, 60);
+    pdf.text(`Тип исследования: ${protocol.studyType}`, 20, 35);
+    pdf.text(`Дата исследования: ${protocol.patientData.studyDate}`, 20, 43);
     
     pdf.setFont('helvetica', 'bold');
-    pdf.text('ПОКАЗАТЕЛИ:', 20, 75);
+    pdf.text('ДАННЫЕ ПАЦИЕНТА:', 20, 55);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`ФИО: ${protocol.patientName}`, 20, 63);
+    pdf.text(`Пол: ${protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский'}`, 20, 71);
+    pdf.text(`Дата рождения: ${protocol.patientData.birthDate} (возраст: ${protocol.patientData.age} лет)`, 20, 79);
+    if (protocol.patientData.weight && protocol.patientData.height) {
+      pdf.text(`Масса: ${protocol.patientData.weight} кг, Рост: ${protocol.patientData.height} см`, 20, 87);
+      if (protocol.patientData.bsa) {
+        pdf.text(`Площадь поверхности тела: ${protocol.patientData.bsa.toFixed(2)} м\u00B2`, 20, 95);
+      }
+    }
+    
+    pdf.setFont('helvetica', 'bold');
+    let yPosition = protocol.patientData.weight && protocol.patientData.height ? 107 : 91;
+    pdf.text('ПОКАЗАТЕЛИ:', 20, yPosition);
     
     const study = studyTypes.find(s => s.name === protocol.studyType);
-    let yPosition = 85;
+    yPosition += 10;
     
     if (study) {
       pdf.setFont('helvetica', 'normal');
@@ -317,18 +383,46 @@ const Index = () => {
           </div>
           
           <div class="info-section">
+            <h2 style="color: #0ea5e9; margin-top: 0;">Информация об исследовании</h2>
             <div class="info-row">
               <span class="info-label">Тип исследования:</span>
               <span>${protocol.studyType}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">ФИО пациента:</span>
+              <span class="info-label">Дата исследования:</span>
+              <span>${protocol.patientData.studyDate}</span>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h2 style="color: #0ea5e9; margin-top: 0;">Данные пациента</h2>
+            <div class="info-row">
+              <span class="info-label">ФИО:</span>
               <span>${protocol.patientName}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Дата исследования:</span>
-              <span>${protocol.date}</span>
+              <span class="info-label">Пол:</span>
+              <span>${protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский'}</span>
             </div>
+            <div class="info-row">
+              <span class="info-label">Дата рождения:</span>
+              <span>${protocol.patientData.birthDate} (возраст: ${protocol.patientData.age} лет)</span>
+            </div>
+            ${protocol.patientData.weight ? `
+            <div class="info-row">
+              <span class="info-label">Масса тела:</span>
+              <span>${protocol.patientData.weight} кг</span>
+            </div>` : ''}
+            ${protocol.patientData.height ? `
+            <div class="info-row">
+              <span class="info-label">Рост:</span>
+              <span>${protocol.patientData.height} см</span>
+            </div>` : ''}
+            ${protocol.patientData.bsa ? `
+            <div class="info-row">
+              <span class="info-label">Площадь поверхности тела:</span>
+              <span>${protocol.patientData.bsa.toFixed(2)} м²</span>
+            </div>` : ''}
           </div>
           
           <h2 style="color: #0ea5e9;">Результаты измерений</h2>
@@ -503,17 +597,112 @@ const Index = () => {
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Данные пациента</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="User" size={20} />
+                      Данные пациента
+                    </CardTitle>
+                    <CardDescription>Заполните все обязательные поля</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <Label htmlFor="patientName">ФИО пациента</Label>
-                      <Input
-                        id="patientName"
-                        placeholder="Иванов Иван Иванович"
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                      />
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="patientName">ФИО пациента <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="patientName"
+                          placeholder="Иванов Иван Иванович"
+                          value={patientData.name}
+                          onChange={(e) => handlePatientDataChange('name', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Пол <span className="text-red-500">*</span></Label>
+                        <Select
+                          value={patientData.gender}
+                          onValueChange={(value) => handlePatientDataChange('gender', value)}
+                        >
+                          <SelectTrigger id="gender">
+                            <SelectValue placeholder="Выберите пол" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Мужской</SelectItem>
+                            <SelectItem value="female">Женский</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="birthDate">Дата рождения <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="birthDate"
+                          type="date"
+                          value={patientData.birthDate}
+                          onChange={(e) => handlePatientDataChange('birthDate', e.target.value)}
+                        />
+                      </div>
+                      
+                      {patientData.birthDate && (
+                        <div className="space-y-2">
+                          <Label>Возраст</Label>
+                          <Input
+                            value={`${patientData.age} лет`}
+                            disabled
+                            className="bg-secondary"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="studyDate">Дата исследования</Label>
+                        <Input
+                          id="studyDate"
+                          type="date"
+                          value={patientData.studyDate}
+                          onChange={(e) => handlePatientDataChange('studyDate', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="weight">Масса тела (кг)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          step="0.1"
+                          placeholder="70"
+                          value={patientData.weight}
+                          onChange={(e) => handlePatientDataChange('weight', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="height">Рост (см)</Label>
+                        <Input
+                          id="height"
+                          type="number"
+                          step="0.1"
+                          placeholder="175"
+                          value={patientData.height}
+                          onChange={(e) => handlePatientDataChange('height', e.target.value)}
+                        />
+                      </div>
+                      
+                      {patientData.weight && patientData.height && patientData.bsa && (
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Площадь поверхности тела (м²)</Label>
+                          <Input
+                            value={`${patientData.bsa.toFixed(2)} м² (формула Дюбуа)`}
+                            disabled
+                            className="bg-secondary font-medium"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Рассчитано автоматически по формуле: √(масса × рост / 3600)
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -596,7 +785,7 @@ const Index = () => {
                   className="w-full"
                   size="lg"
                   onClick={handleGenerateProtocol}
-                  disabled={!patientName || Object.keys(parameters).length === 0}
+                  disabled={!patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0}
                 >
                   <Icon name="FileCheck" size={20} className="mr-2" />
                   Сформировать протокол
@@ -637,8 +826,17 @@ const Index = () => {
                           <div className="flex items-start justify-between">
                             <div className="space-y-1">
                               <CardTitle className="text-lg">{protocol.patientName}</CardTitle>
-                              <CardDescription>
-                                {protocol.studyType} • {protocol.date}
+                              <CardDescription className="space-y-1">
+                                <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
+                                <div className="text-xs">
+                                  {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}, {protocol.patientData.age} лет
+                                  {protocol.patientData.weight && protocol.patientData.height && (
+                                    <> • {protocol.patientData.weight}кг, {protocol.patientData.height}см</>
+                                  )}
+                                  {protocol.patientData.bsa && (
+                                    <> • BSA: {protocol.patientData.bsa.toFixed(2)}м²</>
+                                  )}
+                                </div>
                               </CardDescription>
                             </div>
                             <div className="flex gap-2">
@@ -655,7 +853,10 @@ const Index = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <div>
-                            <h4 className="font-medium mb-2">Показатели:</h4>
+                            <h4 className="font-medium mb-2 flex items-center gap-2">
+                              <Icon name="Activity" size={16} />
+                              Показатели:
+                            </h4>
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(protocol.results).map(([key, value]) => {
                                 const study = studyTypes.find(s => s.name === protocol.studyType);
