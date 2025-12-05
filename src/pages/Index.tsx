@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 type StudyType = {
   id: string;
@@ -143,7 +144,55 @@ const Index = () => {
   };
 
   const exportToPDF = (protocol: Protocol) => {
-    toast.success('Экспорт в PDF (функция в разработке)');
+    const pdf = new jsPDF();
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.text('ПРОТОКОЛ ИССЛЕДОВАНИЯ', 105, 20, { align: 'center' });
+    
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+    pdf.text(`Тип исследования: ${protocol.studyType}`, 20, 40);
+    pdf.text(`Пациент: ${protocol.patientName}`, 20, 50);
+    pdf.text(`Дата: ${protocol.date}`, 20, 60);
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('ПОКАЗАТЕЛИ:', 20, 75);
+    
+    const study = studyTypes.find(s => s.name === protocol.studyType);
+    let yPosition = 85;
+    
+    if (study) {
+      pdf.setFont('helvetica', 'normal');
+      Object.entries(protocol.results).forEach(([key, value]) => {
+        const param = study.parameters.find(p => p.id === key);
+        if (param) {
+          const status = getParameterStatus(value, param.normalRange);
+          const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Погр.' : 'Откл.';
+          const normalRange = `${param.normalRange.min}-${param.normalRange.max} ${param.unit}`;
+          
+          pdf.text(`${param.name}: ${value} ${param.unit} [${statusText}] (Норма: ${normalRange})`, 25, yPosition);
+          yPosition += 8;
+        }
+      });
+    }
+    
+    yPosition += 5;
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('ЗАКЛЮЧЕНИЕ:', 20, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont('helvetica', 'normal');
+    const conclusionLines = pdf.splitTextToSize(protocol.conclusion, 170);
+    pdf.text(conclusionLines, 20, yPosition);
+    
+    yPosition += conclusionLines.length * 7 + 15;
+    pdf.setFontSize(10);
+    pdf.text('_______________________', 20, yPosition);
+    pdf.text('Подпись врача', 20, yPosition + 7);
+    
+    pdf.save(`protocol_${protocol.patientName}_${protocol.id}.pdf`);
+    toast.success('PDF протокол успешно сохранён');
   };
 
   return (
