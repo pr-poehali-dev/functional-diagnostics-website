@@ -195,6 +195,181 @@ const Index = () => {
     toast.success('PDF протокол успешно сохранён');
   };
 
+  const printProtocol = (protocol: Protocol) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Разрешите всплывающие окна для печати');
+      return;
+    }
+
+    const study = studyTypes.find(s => s.name === protocol.studyType);
+    
+    const parametersHTML = study ? Object.entries(protocol.results).map(([key, value]) => {
+      const param = study.parameters.find(p => p.id === key);
+      if (!param) return '';
+      
+      const status = getParameterStatus(value, param.normalRange);
+      const statusColor = status === 'success' ? '#10b981' : status === 'warning' ? '#eab308' : '#ef4444';
+      const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Погр.' : 'Откл.';
+      
+      return `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #e5e7eb;">${param.name}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: 600;">${value} ${param.unit}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb;">${param.normalRange.min} - ${param.normalRange.max} ${param.unit}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb; color: ${statusColor}; font-weight: 600;">${statusText}</td>
+        </tr>
+      `;
+    }).join('') : '';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Протокол - ${protocol.patientName}</title>
+          <style>
+            @media print {
+              body { margin: 0; padding: 20px; }
+              .no-print { display: none; }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              color: #1f2937;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #0ea5e9;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              color: #0ea5e9;
+              font-size: 24px;
+            }
+            .info-section {
+              margin-bottom: 30px;
+            }
+            .info-row {
+              display: flex;
+              margin-bottom: 10px;
+            }
+            .info-label {
+              font-weight: 600;
+              width: 180px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            th {
+              background-color: #0ea5e9;
+              color: white;
+              padding: 10px;
+              text-align: left;
+              border: 1px solid #0ea5e9;
+            }
+            .conclusion {
+              background-color: #f0f9ff;
+              border-left: 4px solid #0ea5e9;
+              padding: 15px;
+              margin-bottom: 40px;
+            }
+            .conclusion h3 {
+              margin-top: 0;
+              color: #0ea5e9;
+            }
+            .signature {
+              margin-top: 60px;
+              display: flex;
+              justify-content: space-between;
+            }
+            .signature-line {
+              border-bottom: 1px solid #000;
+              width: 200px;
+              padding-top: 40px;
+            }
+            .print-button {
+              background-color: #0ea5e9;
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              font-size: 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              margin-bottom: 20px;
+            }
+            .print-button:hover {
+              background-color: #0284c7;
+            }
+          </style>
+        </head>
+        <body>
+          <button class="print-button no-print" onclick="window.print()">🖨️ Печать</button>
+          
+          <div class="header">
+            <h1>ПРОТОКОЛ ФУНКЦИОНАЛЬНОЙ ДИАГНОСТИКИ</h1>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-row">
+              <span class="info-label">Тип исследования:</span>
+              <span>${protocol.studyType}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">ФИО пациента:</span>
+              <span>${protocol.patientName}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Дата исследования:</span>
+              <span>${protocol.date}</span>
+            </div>
+          </div>
+          
+          <h2 style="color: #0ea5e9;">Результаты измерений</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Показатель</th>
+                <th>Значение</th>
+                <th>Норма</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${parametersHTML}
+            </tbody>
+          </table>
+          
+          <div class="conclusion">
+            <h3>Заключение</h3>
+            <p>${protocol.conclusion}</p>
+          </div>
+          
+          <div class="signature">
+            <div>
+              <div class="signature-line"></div>
+              <p style="margin-top: 5px; font-size: 14px;">Подпись врача</p>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <p style="margin-top: 5px; font-size: 14px;">Дата</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('Открыто окно печати');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -278,9 +453,14 @@ const Index = () => {
                         <p className="font-medium">{protocol.patientName}</p>
                         <p className="text-sm text-muted-foreground">{protocol.studyType} • {protocol.date}</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => exportToPDF(protocol)}>
-                        <Icon name="Download" size={18} />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => printProtocol(protocol)} title="Печать">
+                          <Icon name="Printer" size={18} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => exportToPDF(protocol)} title="Скачать PDF">
+                          <Icon name="Download" size={18} />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </CardContent>
@@ -461,10 +641,16 @@ const Index = () => {
                                 {protocol.studyType} • {protocol.date}
                               </CardDescription>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => exportToPDF(protocol)}>
-                              <Icon name="Download" size={16} className="mr-2" />
-                              PDF
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => printProtocol(protocol)}>
+                                <Icon name="Printer" size={16} className="mr-2" />
+                                Печать
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => exportToPDF(protocol)}>
+                                <Icon name="Download" size={16} className="mr-2" />
+                                PDF
+                              </Button>
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
