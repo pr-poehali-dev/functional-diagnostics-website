@@ -1,90 +1,15 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-
-type StudyType = {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  parameters: Parameter[];
-};
-
-type Parameter = {
-  id: string;
-  name: string;
-  unit: string;
-  normalRange: { min: number; max: number };
-};
-
-type PatientData = {
-  name: string;
-  gender: 'male' | 'female' | '';
-  birthDate: string;
-  age?: number;
-  weight: string;
-  height: string;
-  bsa?: number;
-  studyDate: string;
-};
-
-type Protocol = {
-  id: string;
-  studyType: string;
-  date: string;
-  patientName: string;
-  patientData: PatientData;
-  results: Record<string, number>;
-  conclusion: string;
-};
-
-const studyTypes: StudyType[] = [
-  {
-    id: 'ecg',
-    name: 'ЭКГ',
-    icon: 'Activity',
-    description: 'Электрокардиография',
-    parameters: [
-      { id: 'hr', name: 'ЧСС', unit: 'уд/мин', normalRange: { min: 60, max: 90 } },
-      { id: 'pq', name: 'PQ интервал', unit: 'мс', normalRange: { min: 120, max: 200 } },
-      { id: 'qrs', name: 'QRS комплекс', unit: 'мс', normalRange: { min: 60, max: 100 } },
-      { id: 'qt', name: 'QT интервал', unit: 'мс', normalRange: { min: 340, max: 440 } },
-    ],
-  },
-  {
-    id: 'echo',
-    name: 'ЭхоКГ',
-    icon: 'Heart',
-    description: 'Эхокардиография',
-    parameters: [
-      { id: 'lvef', name: 'ФВ ЛЖ', unit: '%', normalRange: { min: 55, max: 70 } },
-      { id: 'lv_edv', name: 'КДО ЛЖ', unit: 'мл', normalRange: { min: 65, max: 195 } },
-      { id: 'lv_esv', name: 'КСО ЛЖ', unit: 'мл', normalRange: { min: 18, max: 70 } },
-      { id: 'ivs', name: 'МЖП', unit: 'мм', normalRange: { min: 7, max: 11 } },
-    ],
-  },
-  {
-    id: 'spirometry',
-    name: 'Спирометрия',
-    icon: 'Wind',
-    description: 'Исследование функции внешнего дыхания',
-    parameters: [
-      { id: 'fvc', name: 'ФЖЕЛ', unit: 'л', normalRange: { min: 3.5, max: 5.5 } },
-      { id: 'fev1', name: 'ОФВ1', unit: 'л', normalRange: { min: 2.8, max: 4.5 } },
-      { id: 'fev1_fvc', name: 'ОФВ1/ФЖЕЛ', unit: '%', normalRange: { min: 70, max: 85 } },
-      { id: 'pef', name: 'ПСВ', unit: 'л/с', normalRange: { min: 5, max: 10 } },
-    ],
-  },
-];
+import { StudyType, PatientData, Protocol, studyTypes } from '@/types/medical';
+import PatientDataForm from '@/components/PatientDataForm';
+import StudyParametersForm from '@/components/StudyParametersForm';
+import ProtocolArchive from '@/components/ProtocolArchive';
 
 const Index = () => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
@@ -595,177 +520,17 @@ const Index = () => {
 
             {selectedStudy && (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon name="User" size={20} />
-                      Данные пациента
-                    </CardTitle>
-                    <CardDescription>Заполните все обязательные поля</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="patientName">ФИО пациента <span className="text-red-500">*</span></Label>
-                        <Input
-                          id="patientName"
-                          placeholder="Иванов Иван Иванович"
-                          value={patientData.name}
-                          onChange={(e) => handlePatientDataChange('name', e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="gender">Пол <span className="text-red-500">*</span></Label>
-                        <Select
-                          value={patientData.gender}
-                          onValueChange={(value) => handlePatientDataChange('gender', value)}
-                        >
-                          <SelectTrigger id="gender">
-                            <SelectValue placeholder="Выберите пол" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Мужской</SelectItem>
-                            <SelectItem value="female">Женский</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="birthDate">Дата рождения <span className="text-red-500">*</span></Label>
-                        <Input
-                          id="birthDate"
-                          type="date"
-                          value={patientData.birthDate}
-                          onChange={(e) => handlePatientDataChange('birthDate', e.target.value)}
-                        />
-                      </div>
-                      
-                      {patientData.birthDate && (
-                        <div className="space-y-2">
-                          <Label>Возраст</Label>
-                          <Input
-                            value={`${patientData.age} лет`}
-                            disabled
-                            className="bg-secondary"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="studyDate">Дата исследования</Label>
-                        <Input
-                          id="studyDate"
-                          type="date"
-                          value={patientData.studyDate}
-                          onChange={(e) => handlePatientDataChange('studyDate', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="weight">Масса тела (кг)</Label>
-                        <Input
-                          id="weight"
-                          type="number"
-                          step="0.1"
-                          placeholder="70"
-                          value={patientData.weight}
-                          onChange={(e) => handlePatientDataChange('weight', e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="height">Рост (см)</Label>
-                        <Input
-                          id="height"
-                          type="number"
-                          step="0.1"
-                          placeholder="175"
-                          value={patientData.height}
-                          onChange={(e) => handlePatientDataChange('height', e.target.value)}
-                        />
-                      </div>
-                      
-                      {patientData.weight && patientData.height && patientData.bsa && (
-                        <div className="space-y-2 md:col-span-2">
-                          <Label>Площадь поверхности тела (м²)</Label>
-                          <Input
-                            value={`${patientData.bsa.toFixed(2)} м² (формула Дюбуа)`}
-                            disabled
-                            className="bg-secondary font-medium"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Рассчитано автоматически по формуле: √(масса × рост / 3600)
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <PatientDataForm
+                  patientData={patientData}
+                  onPatientDataChange={handlePatientDataChange}
+                />
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon name={selectedStudy.icon as any} size={20} />
-                      {selectedStudy.name} - Показатели
-                    </CardTitle>
-                    <CardDescription>{selectedStudy.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {selectedStudy.parameters.map((param) => {
-                      const value = parseFloat(parameters[param.id]);
-                      const status = !isNaN(value) ? getParameterStatus(value, param.normalRange) : null;
-
-                      return (
-                        <div key={param.id} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor={param.id}>{param.name}</Label>
-                            {status && (
-                              <Badge
-                                variant={status === 'success' ? 'default' : 'destructive'}
-                                className={
-                                  status === 'success'
-                                    ? 'bg-green-500'
-                                    : status === 'warning'
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
-                                }
-                              >
-                                {status === 'success' ? 'Норма' : status === 'warning' ? 'Погр.' : 'Откл.'}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              id={param.id}
-                              type="number"
-                              placeholder={`${param.normalRange.min} - ${param.normalRange.max}`}
-                              value={parameters[param.id] || ''}
-                              onChange={(e) => handleParameterChange(param.id, e.target.value)}
-                              className={
-                                status === 'danger'
-                                  ? 'border-red-500'
-                                  : status === 'warning'
-                                  ? 'border-yellow-500'
-                                  : status === 'success'
-                                  ? 'border-green-500'
-                                  : ''
-                              }
-                            />
-                            <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Норма: {param.normalRange.min} - {param.normalRange.max} {param.unit}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
+                <StudyParametersForm
+                  selectedStudy={selectedStudy}
+                  parameters={parameters}
+                  onParameterChange={handleParameterChange}
+                  getParameterStatus={getParameterStatus}
+                />
 
                 {Object.keys(parameters).length > 0 && (
                   <Card className="bg-primary/5 border-primary/20">
@@ -804,99 +569,12 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="archive" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="Archive" size={20} />
-                  Архив протоколов
-                </CardTitle>
-                <CardDescription>Всего протоколов: {protocols.length}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {protocols.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Icon name="Inbox" size={48} className="text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Протоколы пока не созданы</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {protocols.map((protocol) => (
-                      <Card key={protocol.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <CardTitle className="text-lg">{protocol.patientName}</CardTitle>
-                              <CardDescription className="space-y-1">
-                                <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
-                                <div className="text-xs">
-                                  {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}, {protocol.patientData.age} лет
-                                  {protocol.patientData.weight && protocol.patientData.height && (
-                                    <> • {protocol.patientData.weight}кг, {protocol.patientData.height}см</>
-                                  )}
-                                  {protocol.patientData.bsa && (
-                                    <> • BSA: {protocol.patientData.bsa.toFixed(2)}м²</>
-                                  )}
-                                </div>
-                              </CardDescription>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm" onClick={() => printProtocol(protocol)}>
-                                <Icon name="Printer" size={16} className="mr-2" />
-                                Печать
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => exportToPDF(protocol)}>
-                                <Icon name="Download" size={16} className="mr-2" />
-                                PDF
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <Icon name="Activity" size={16} />
-                              Показатели:
-                            </h4>
-                            <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(protocol.results).map(([key, value]) => {
-                                const study = studyTypes.find(s => s.name === protocol.studyType);
-                                const param = study?.parameters.find(p => p.id === key);
-                                if (!param) return null;
-
-                                const status = getParameterStatus(value, param.normalRange);
-
-                                return (
-                                  <div key={key} className="flex items-center justify-between text-sm">
-                                    <span className="text-muted-foreground">{param.name}:</span>
-                                    <span className="font-medium flex items-center gap-2">
-                                      {value} {param.unit}
-                                      <div
-                                        className={`h-2 w-2 rounded-full ${
-                                          status === 'success'
-                                            ? 'bg-green-500'
-                                            : status === 'warning'
-                                            ? 'bg-yellow-500'
-                                            : 'bg-red-500'
-                                        }`}
-                                      />
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <Separator />
-                          <div>
-                            <h4 className="font-medium mb-2">Заключение:</h4>
-                            <p className="text-sm text-muted-foreground">{protocol.conclusion}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ProtocolArchive
+              protocols={protocols}
+              onExportToPDF={exportToPDF}
+              onPrintProtocol={printProtocol}
+              getParameterStatus={getParameterStatus}
+            />
           </TabsContent>
         </Tabs>
       </main>
