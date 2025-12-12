@@ -1,0 +1,44 @@
+{
+  "tests": [
+    {
+      "name": "Register new doctor",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "register",
+        "email": "test@example.com",
+        "password": "testpass123",
+        "full_name": "Иванов Иван Иванович",
+        "specialization": "Кардиолог"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "token": "string",
+        "doctor": {
+          "id": "number",
+          "email": "string",
+          "full_name": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login existing doctor",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "login",
+        "email": "test@example.com",
+        "password": "testpass123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "token": "string",
+        "doctor": {
+          "email": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

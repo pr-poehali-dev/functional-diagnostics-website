@@ -6,12 +6,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthForm from '@/components/AuthForm';
 import { StudyType, PatientData, Protocol, studyTypes } from '@/types/medical';
 import PatientDataForm from '@/components/PatientDataForm';
 import StudyParametersForm from '@/components/StudyParametersForm';
 import ProtocolArchive from '@/components/ProtocolArchive';
+import QuickInputModal from '@/components/QuickInputModal';
+import DoctorSettings from '@/components/DoctorSettings';
 
 const Index = () => {
+  const { doctor, isLoading: authLoading, logout } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Icon name="Loader2" className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!doctor) {
+    return <AuthForm />;
+  }
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const [patientData, setPatientData] = useState<PatientData>({
     name: '',
@@ -19,11 +36,14 @@ const Index = () => {
     birthDate: '',
     weight: '',
     height: '',
+    ultrasoundDevice: '',
     studyDate: new Date().toISOString().split('T')[0],
   });
   const [parameters, setParameters] = useState<Record<string, string>>({});
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [activeTab, setActiveTab] = useState('home');
+  const [isQuickInputOpen, setIsQuickInputOpen] = useState(false);
+  const [fieldOrder, setFieldOrder] = useState<string[]>([]);
 
   const calculateAge = (birthDate: string): number => {
     if (!birthDate) return 0;
@@ -60,6 +80,21 @@ const Index = () => {
 
   const handleParameterChange = (id: string, value: string) => {
     setParameters({ ...parameters, [id]: value });
+  };
+
+  const handleQuickInputSave = (values: Record<string, string>) => {
+    setParameters({ ...parameters, ...values });
+    toast.success('Данные сохранены');
+  };
+
+  const openQuickInput = () => {
+    if (!selectedStudy) {
+      toast.error('Выберите тип исследования');
+      return;
+    }
+    const defaultOrder = selectedStudy.parameters.map(p => p.id);
+    setFieldOrder(defaultOrder);
+    setIsQuickInputOpen(true);
   };
 
   const getParameterStatus = (value: number, range: { min: number; max: number }) => {
@@ -139,15 +174,23 @@ const Index = () => {
     pdf.text(`ФИО: ${protocol.patientName}`, 20, 63);
     pdf.text(`Пол: ${protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский'}`, 20, 71);
     pdf.text(`Дата рождения: ${protocol.patientData.birthDate} (возраст: ${protocol.patientData.age} лет)`, 20, 79);
+    
+    let yPos = 87;
     if (protocol.patientData.weight && protocol.patientData.height) {
-      pdf.text(`Масса: ${protocol.patientData.weight} кг, Рост: ${protocol.patientData.height} см`, 20, 87);
+      pdf.text(`Масса: ${protocol.patientData.weight} кг, Рост: ${protocol.patientData.height} см`, 20, yPos);
+      yPos += 8;
       if (protocol.patientData.bsa) {
-        pdf.text(`Площадь поверхности тела: ${protocol.patientData.bsa.toFixed(2)} м\u00B2`, 20, 95);
+        pdf.text(`Площадь поверхности тела: ${protocol.patientData.bsa.toFixed(2)} м\u00B2`, 20, yPos);
+        yPos += 8;
       }
+    }
+    if (protocol.patientData.ultrasoundDevice) {
+      pdf.text(`УЗ аппарат: ${protocol.patientData.ultrasoundDevice}`, 20, yPos);
+      yPos += 8;
     }
     
     pdf.setFont('helvetica', 'bold');
-    let yPosition = protocol.patientData.weight && protocol.patientData.height ? 107 : 91;
+    let yPosition = yPos + 4;
     pdf.text('ПОКАЗАТЕЛИ:', 20, yPosition);
     
     const study = studyTypes.find(s => s.name === protocol.studyType);
@@ -179,8 +222,23 @@ const Index = () => {
     
     yPosition += conclusionLines.length * 7 + 15;
     pdf.setFontSize(10);
-    pdf.text('_______________________', 20, yPosition);
-    pdf.text('Подпись врача', 20, yPosition + 7);
+    
+    if (doctor?.signature_url) {
+      try {
+        pdf.addImage(doctor.signature_url, 'PNG', 20, yPosition, 50, 20);
+        yPosition += 25;
+      } catch (e) {
+        pdf.text('_______________________', 20, yPosition);
+        yPosition += 7;
+      }
+    } else {
+      pdf.text('_______________________', 20, yPosition);
+      yPosition += 7;
+    }
+    
+    pdf.text('Подпись врача', 20, yPosition);
+    pdf.setFontSize(9);
+    pdf.text(`${doctor?.full_name} (${doctor?.specialization || 'Врач'})`, 20, yPosition + 5);
     
     pdf.save(`protocol_${protocol.patientName}_${protocol.id}.pdf`);
     toast.success('PDF протокол успешно сохранён');
@@ -348,6 +406,11 @@ const Index = () => {
               <span class="info-label">Площадь поверхности тела:</span>
               <span>${protocol.patientData.bsa.toFixed(2)} м²</span>
             </div>` : ''}
+            ${protocol.patientData.ultrasoundDevice ? `
+            <div class="info-row">
+              <span class="info-label">УЗ аппарат:</span>
+              <span>${protocol.patientData.ultrasoundDevice}</span>
+            </div>` : ''}
           </div>
           
           <h2 style="color: #0ea5e9;">Результаты измерений</h2>
@@ -372,8 +435,11 @@ const Index = () => {
           
           <div class="signature">
             <div>
-              <div class="signature-line"></div>
+              ${doctor?.signature_url ? `
+                <img src="${doctor.signature_url}" alt="Подпись" style="max-height: 60px; margin-bottom: 10px;" />
+              ` : '<div class="signature-line"></div>'}
               <p style="margin-top: 5px; font-size: 14px;">Подпись врача</p>
+              <p style="margin-top: 2px; font-size: 12px; color: #6b7280;">${doctor?.full_name} (${doctor?.specialization || 'Врач'})</p>
             </div>
             <div>
               <div class="signature-line"></div>
@@ -393,13 +459,24 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <Icon name="Stethoscope" className="text-white" size={24} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+                <Icon name="Stethoscope" className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">МедДиагностика</h1>
+                <p className="text-sm text-muted-foreground">Система функциональной диагностики</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">МедДиагностика</h1>
-              <p className="text-sm text-muted-foreground">Система функциональной диагностики</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium">{doctor.full_name}</p>
+                <p className="text-xs text-muted-foreground">{doctor.specialization || 'Врач'}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={logout} title="Выйти">
+                <Icon name="LogOut" size={20} />
+              </Button>
             </div>
           </div>
         </div>
@@ -407,7 +484,11 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="settings" className="gap-2">
+              <Icon name="Settings" size={18} />
+              Настройки
+            </TabsTrigger>
             <TabsTrigger value="home" className="gap-2">
               <Icon name="Home" size={18} />
               Главная
@@ -525,6 +606,24 @@ const Index = () => {
                   onPatientDataChange={handlePatientDataChange}
                 />
 
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="Zap" size={20} />
+                      Быстрый ввод
+                    </CardTitle>
+                    <CardDescription>
+                      Введите данные в специальном окне с навигацией клавиатурой
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={openQuickInput} className="w-full" variant="outline">
+                      <Icon name="Keyboard" size={18} className="mr-2" />
+                      Открыть окно быстрого ввода
+                    </Button>
+                  </CardContent>
+                </Card>
+
                 <StudyParametersForm
                   selectedStudy={selectedStudy}
                   parameters={parameters}
@@ -568,6 +667,10 @@ const Index = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="settings" className="space-y-6">
+            <DoctorSettings />
+          </TabsContent>
+
           <TabsContent value="archive" className="space-y-6">
             <ProtocolArchive
               protocols={protocols}
@@ -578,6 +681,17 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {selectedStudy && (
+        <QuickInputModal
+          isOpen={isQuickInputOpen}
+          onClose={() => setIsQuickInputOpen(false)}
+          parameters={selectedStudy.parameters}
+          fieldOrder={fieldOrder}
+          values={parameters}
+          onSave={handleQuickInputSave}
+        />
+      )}
     </div>
   );
 };

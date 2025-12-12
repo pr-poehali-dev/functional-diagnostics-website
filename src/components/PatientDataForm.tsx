@@ -79,6 +79,16 @@ const PatientDataForm = ({ patientData, onPatientDataChange }: PatientDataFormPr
               onChange={(e) => onPatientDataChange('studyDate', e.target.value)}
             />
           </div>
+          
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="ultrasoundDevice">УЗ аппарат</Label>
+            <Input
+              id="ultrasoundDevice"
+              placeholder="Например: GE Voluson E10"
+              value={patientData.ultrasoundDevice}
+              onChange={(e) => onPatientDataChange('ultrasoundDevice', e.target.value)}
+            />
+          </div>
         </div>
         
         <Separator />

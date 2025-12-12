@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Get doctor norms",
+      "method": "GET",
+      "path": "/?doctor_id=1&type=norms&study_type=ecg",
+      "headers": {
+        "x-auth-token": "test-token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "norms": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save norm",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "x-auth-token": "test-token"
+      },
+      "body": {
+        "action": "save_norm",
+        "doctor_id": 1,
+        "study_type": "ecg",
+        "parameter_id": "hr",
+        "condition_type": "default",
+        "condition_value": "all",
+        "min_value": 60,
+        "max_value": 90
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "message": "string",
+        "id": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

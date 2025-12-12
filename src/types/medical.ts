@@ -21,6 +21,7 @@ export type PatientData = {
   weight: string;
   height: string;
   bsa?: number;
+  ultrasoundDevice: string;
   studyDate: string;
 };
 
