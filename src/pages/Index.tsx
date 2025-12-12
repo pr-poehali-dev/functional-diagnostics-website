@@ -17,6 +17,10 @@ const Index = () => {
     parameters,
     setParameters,
     protocols,
+    protocolsLoading,
+    fetchProtocols,
+    updateProtocol,
+    deleteProtocol,
     activeTab,
     setActiveTab,
     isQuickInputOpen,
@@ -29,7 +33,7 @@ const Index = () => {
     getParameterStatus,
     generateConclusion,
     handleGenerateProtocol,
-  } = useProtocolManager();
+  } = useProtocolManager(doctor?.email || null);
 
   const { exportToPDF, printProtocol } = useProtocolExporter({
     doctor,
@@ -68,6 +72,9 @@ const Index = () => {
           generateConclusion={generateConclusion}
           handleGenerateProtocol={handleGenerateProtocol}
           protocols={protocols}
+          protocolsLoading={protocolsLoading}
+          fetchProtocols={fetchProtocols}
+          deleteProtocol={deleteProtocol}
           exportToPDF={exportToPDF}
           printProtocol={printProtocol}
         />

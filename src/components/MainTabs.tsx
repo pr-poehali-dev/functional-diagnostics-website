@@ -25,6 +25,9 @@ type MainTabsProps = {
   generateConclusion: () => string;
   handleGenerateProtocol: () => void;
   protocols: Protocol[];
+  protocolsLoading: boolean;
+  fetchProtocols: (filters?: any) => void;
+  deleteProtocol: (id: string) => void;
   exportToPDF: (protocol: Protocol) => void;
   printProtocol: (protocol: Protocol) => void;
 };
@@ -44,6 +47,9 @@ const MainTabs = ({
   generateConclusion,
   handleGenerateProtocol,
   protocols,
+  protocolsLoading,
+  fetchProtocols,
+  deleteProtocol,
   exportToPDF,
   printProtocol,
 }: MainTabsProps) => {
@@ -239,8 +245,11 @@ const MainTabs = ({
       <TabsContent value="archive" className="space-y-6">
         <ProtocolArchive
           protocols={protocols}
+          isLoading={protocolsLoading}
           onExportToPDF={exportToPDF}
           onPrintProtocol={printProtocol}
+          onDeleteProtocol={deleteProtocol}
+          onSearchChange={fetchProtocols}
           getParameterStatus={getParameterStatus}
         />
       </TabsContent>

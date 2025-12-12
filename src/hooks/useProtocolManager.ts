@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { StudyType, PatientData, Protocol } from '@/types/medical';
+import { useProtocolsAPI } from './useProtocolsAPI';
 
-export const useProtocolManager = () => {
+export const useProtocolManager = (authToken: string | null) => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const [patientData, setPatientData] = useState<PatientData>({
     name: '',
@@ -14,10 +15,18 @@ export const useProtocolManager = () => {
     studyDate: new Date().toISOString().split('T')[0],
   });
   const [parameters, setParameters] = useState<Record<string, string>>({});
-  const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [activeTab, setActiveTab] = useState('home');
   const [isQuickInputOpen, setIsQuickInputOpen] = useState(false);
   const [fieldOrder, setFieldOrder] = useState<string[]>([]);
+
+  const {
+    protocols,
+    isLoading: protocolsLoading,
+    fetchProtocols,
+    createProtocol,
+    updateProtocol,
+    deleteProtocol,
+  } = useProtocolsAPI(authToken);
 
   const calculateAge = (birthDate: string): number => {
     if (!birthDate) return 0;
@@ -101,7 +110,7 @@ export const useProtocolManager = () => {
     return `${selectedStudy.name}: Выявлены отклонения - ${issues}. Рекомендована консультация специалиста.`;
   };
 
-  const handleGenerateProtocol = () => {
+  const handleGenerateProtocol = async () => {
     if (!selectedStudy || !patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0) {
       toast.error('Заполните все обязательные поля');
       return;
@@ -115,19 +124,18 @@ export const useProtocolManager = () => {
       }
     });
 
-    const protocol: Protocol = {
-      id: Date.now().toString(),
+    const protocol = {
       studyType: selectedStudy.name,
-      date: new Date().toLocaleString('ru-RU'),
       patientName: patientData.name,
       patientData: { ...patientData },
       results,
       conclusion: generateConclusion(),
     };
 
-    setProtocols([protocol, ...protocols]);
-    toast.success('Протокол сформирован');
-    setActiveTab('archive');
+    const createdId = await createProtocol(protocol);
+    if (createdId) {
+      setActiveTab('archive');
+    }
   };
 
   return {
@@ -138,7 +146,10 @@ export const useProtocolManager = () => {
     parameters,
     setParameters,
     protocols,
-    setProtocols,
+    protocolsLoading,
+    fetchProtocols,
+    updateProtocol,
+    deleteProtocol,
     activeTab,
     setActiveTab,
     isQuickInputOpen,
