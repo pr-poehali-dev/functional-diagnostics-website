@@ -27,6 +27,7 @@ type MainTabsProps = {
   protocols: Protocol[];
   protocolsLoading: boolean;
   fetchProtocols: (filters?: any) => void;
+  updateProtocol: (protocolId: string, updates: any) => Promise<boolean>;
   deleteProtocol: (id: string) => void;
   exportToPDF: (protocol: Protocol) => void;
   printProtocol: (protocol: Protocol) => void;
@@ -49,6 +50,7 @@ const MainTabs = ({
   protocols,
   protocolsLoading,
   fetchProtocols,
+  updateProtocol,
   deleteProtocol,
   exportToPDF,
   printProtocol,
@@ -248,6 +250,7 @@ const MainTabs = ({
           isLoading={protocolsLoading}
           onExportToPDF={exportToPDF}
           onPrintProtocol={printProtocol}
+          onEditProtocol={updateProtocol}
           onDeleteProtocol={deleteProtocol}
           onSearchChange={fetchProtocols}
           getParameterStatus={getParameterStatus}

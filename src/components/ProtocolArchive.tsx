@@ -17,12 +17,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import Icon from '@/components/ui/icon';
 import { Protocol, studyTypes } from '@/types/medical';
+import ProtocolEditModal from './ProtocolEditModal';
 
 type ProtocolArchiveProps = {
   protocols: Protocol[];
   isLoading: boolean;
   onExportToPDF: (protocol: Protocol) => void;
   onPrintProtocol: (protocol: Protocol) => void;
+  onEditProtocol: (protocolId: string, updates: any) => Promise<boolean>;
   onDeleteProtocol: (id: string) => void;
   onSearchChange: (filters: any) => void;
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
@@ -33,6 +35,7 @@ const ProtocolArchive = ({
   isLoading,
   onExportToPDF,
   onPrintProtocol,
+  onEditProtocol,
   onDeleteProtocol,
   onSearchChange,
   getParameterStatus,
@@ -45,6 +48,8 @@ const ProtocolArchive = ({
   const [sortOrder, setSortOrder] = useState('desc');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [protocolToDelete, setProtocolToDelete] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [protocolToEdit, setProtocolToEdit] = useState<Protocol | null>(null);
 
   const handleSearch = () => {
     onSearchChange({
@@ -80,6 +85,16 @@ const ProtocolArchive = ({
     }
   };
 
+  const openEditModal = (protocol: Protocol) => {
+    setProtocolToEdit(protocol);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setProtocolToEdit(null);
+  };
+
   return (
     <>
       <Card>
@@ -105,12 +120,12 @@ const ProtocolArchive = ({
 
               <div>
                 <Label htmlFor="searchStudyType">Тип исследования</Label>
-                <Select value={searchStudyType} onValueChange={setSearchStudyType}>
+                <Select value={searchStudyType || 'all'} onValueChange={(val) => setSearchStudyType(val === 'all' ? '' : val)}>
                   <SelectTrigger id="searchStudyType">
                     <SelectValue placeholder="Все типы" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все типы</SelectItem>
+                    <SelectItem value="all">Все типы</SelectItem>
                     {studyTypes.map((type) => (
                       <SelectItem key={type.id} value={type.name}>
                         {type.name}
@@ -215,6 +230,10 @@ const ProtocolArchive = ({
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => openEditModal(protocol)}>
+                          <Icon name="Edit" size={16} className="mr-2" />
+                          Редактировать
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => onPrintProtocol(protocol)}>
                           <Icon name="Printer" size={16} className="mr-2" />
                           Печать
@@ -297,6 +316,13 @@ const ProtocolArchive = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ProtocolEditModal
+        protocol={protocolToEdit}
+        isOpen={editModalOpen}
+        onClose={closeEditModal}
+        onSave={onEditProtocol}
+      />
     </>
   );
 };

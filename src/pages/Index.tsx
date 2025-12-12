@@ -74,6 +74,7 @@ const Index = () => {
           protocols={protocols}
           protocolsLoading={protocolsLoading}
           fetchProtocols={fetchProtocols}
+          updateProtocol={updateProtocol}
           deleteProtocol={deleteProtocol}
           exportToPDF={exportToPDF}
           printProtocol={printProtocol}
