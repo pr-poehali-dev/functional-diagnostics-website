@@ -18,6 +18,10 @@ import {
 import Icon from '@/components/ui/icon';
 import { Protocol, studyTypes } from '@/types/medical';
 import ProtocolEditModal from './ProtocolEditModal';
+import ProtocolImportModal from './ProtocolImportModal';
+import { exportProtocolsToExcel, exportSingleProtocolToExcel } from '@/utils/excelExport';
+import { ImportedProtocol } from '@/utils/excelImport';
+import { toast } from 'sonner';
 
 type ProtocolArchiveProps = {
   protocols: Protocol[];
@@ -26,6 +30,7 @@ type ProtocolArchiveProps = {
   onPrintProtocol: (protocol: Protocol) => void;
   onEditProtocol: (protocolId: string, updates: any) => Promise<boolean>;
   onDeleteProtocol: (id: string) => void;
+  onImportProtocols: (protocols: ImportedProtocol[]) => Promise<void>;
   onSearchChange: (filters: any) => void;
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
 };
@@ -37,6 +42,7 @@ const ProtocolArchive = ({
   onPrintProtocol,
   onEditProtocol,
   onDeleteProtocol,
+  onImportProtocols,
   onSearchChange,
   getParameterStatus,
 }: ProtocolArchiveProps) => {
@@ -50,6 +56,7 @@ const ProtocolArchive = ({
   const [protocolToDelete, setProtocolToDelete] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [protocolToEdit, setProtocolToEdit] = useState<Protocol | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const handleSearch = () => {
     onSearchChange({
@@ -99,11 +106,39 @@ const ProtocolArchive = ({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Icon name="Archive" size={20} />
-            Архив протоколов
-          </CardTitle>
-          <CardDescription>Всего протоколов: {protocols.length}</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Archive" size={20} />
+                Архив протоколов
+              </CardTitle>
+              <CardDescription>Всего протоколов: {protocols.length}</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (protocols.length > 0) {
+                    exportProtocolsToExcel(protocols);
+                    toast.success('Протоколы экспортированы в Excel');
+                  } else {
+                    toast.error('Нет протоколов для экспорта');
+                  }
+                }}
+                disabled={protocols.length === 0}
+              >
+                <Icon name="FileSpreadsheet" size={16} className="mr-2" />
+                Экспорт в Excel
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+              >
+                <Icon name="Upload" size={16} className="mr-2" />
+                Импорт из Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 mb-6 p-4 bg-muted/30 rounded-lg">
@@ -229,7 +264,7 @@ const ProtocolArchive = ({
                           </div>
                         </CardDescription>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" onClick={() => openEditModal(protocol)}>
                           <Icon name="Edit" size={16} className="mr-2" />
                           Редактировать
@@ -241,6 +276,13 @@ const ProtocolArchive = ({
                         <Button variant="outline" size="sm" onClick={() => onExportToPDF(protocol)}>
                           <Icon name="Download" size={16} className="mr-2" />
                           PDF
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          exportSingleProtocolToExcel(protocol);
+                          toast.success('Протокол экспортирован в Excel');
+                        }}>
+                          <Icon name="FileSpreadsheet" size={16} className="mr-2" />
+                          Excel
                         </Button>
                         <Button
                           variant="outline"
@@ -322,6 +364,12 @@ const ProtocolArchive = ({
         isOpen={editModalOpen}
         onClose={closeEditModal}
         onSave={onEditProtocol}
+      />
+
+      <ProtocolImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImport={onImportProtocols}
       />
     </>
   );

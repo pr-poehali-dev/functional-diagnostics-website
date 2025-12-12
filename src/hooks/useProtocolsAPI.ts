@@ -187,6 +187,34 @@ export const useProtocolsAPI = (authToken: string | null) => {
     }
   };
 
+  const importProtocols = async (importedProtocols: any[]) => {
+    if (!authToken) {
+      toast.error('Требуется авторизация');
+      return;
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const protocol of importedProtocols) {
+      const created = await createProtocol(protocol);
+      if (created) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Импортировано ${successCount} протоколов`);
+    }
+    if (failCount > 0) {
+      toast.error(`Не удалось импортировать ${failCount} протоколов`);
+    }
+
+    fetchProtocols();
+  };
+
   useEffect(() => {
     if (authToken) {
       fetchProtocols();
@@ -200,5 +228,6 @@ export const useProtocolsAPI = (authToken: string | null) => {
     createProtocol,
     updateProtocol,
     deleteProtocol,
+    importProtocols,
   };
 };

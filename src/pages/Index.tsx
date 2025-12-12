@@ -21,6 +21,7 @@ const Index = () => {
     fetchProtocols,
     updateProtocol,
     deleteProtocol,
+    importProtocols,
     activeTab,
     setActiveTab,
     isQuickInputOpen,
@@ -76,6 +77,7 @@ const Index = () => {
           fetchProtocols={fetchProtocols}
           updateProtocol={updateProtocol}
           deleteProtocol={deleteProtocol}
+          importProtocols={importProtocols}
           exportToPDF={exportToPDF}
           printProtocol={printProtocol}
         />

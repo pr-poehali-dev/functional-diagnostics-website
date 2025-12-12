@@ -29,6 +29,7 @@ type MainTabsProps = {
   fetchProtocols: (filters?: any) => void;
   updateProtocol: (protocolId: string, updates: any) => Promise<boolean>;
   deleteProtocol: (id: string) => void;
+  importProtocols: (protocols: any[]) => Promise<void>;
   exportToPDF: (protocol: Protocol) => void;
   printProtocol: (protocol: Protocol) => void;
 };
@@ -52,6 +53,7 @@ const MainTabs = ({
   fetchProtocols,
   updateProtocol,
   deleteProtocol,
+  importProtocols,
   exportToPDF,
   printProtocol,
 }: MainTabsProps) => {
@@ -252,6 +254,7 @@ const MainTabs = ({
           onPrintProtocol={printProtocol}
           onEditProtocol={updateProtocol}
           onDeleteProtocol={deleteProtocol}
+          onImportProtocols={importProtocols}
           onSearchChange={fetchProtocols}
           getParameterStatus={getParameterStatus}
         />

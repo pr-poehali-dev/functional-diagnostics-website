@@ -26,6 +26,7 @@ export const useProtocolManager = (authToken: string | null) => {
     createProtocol,
     updateProtocol,
     deleteProtocol,
+    importProtocols,
   } = useProtocolsAPI(authToken);
 
   const calculateAge = (birthDate: string): number => {
@@ -150,6 +151,7 @@ export const useProtocolManager = (authToken: string | null) => {
     fetchProtocols,
     updateProtocol,
     deleteProtocol,
+    importProtocols,
     activeTab,
     setActiveTab,
     isQuickInputOpen,
