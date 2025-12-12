@@ -74,13 +74,32 @@ const DoctorSettings = () => {
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         
-        updateDoctor({ signature_url: base64 });
-        toast.success('Подпись загружена');
+        const response = await fetch(AUTH_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token || '',
+          },
+          body: JSON.stringify({
+            action: 'update_signature',
+            doctor_id: doctor?.id,
+            signature_url: base64,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Ошибка сохранения подписи');
+        }
+
+        const data = await response.json();
+        updateDoctor(data.doctor);
+        toast.success('Подпись сохранена');
         setSignatureFile(null);
       };
       reader.readAsDataURL(signatureFile);
     } catch (error) {
-      toast.error('Ошибка загрузки подписи');
+      toast.error(error instanceof Error ? error.message : 'Ошибка загрузки подписи');
     } finally {
       setIsLoading(false);
     }

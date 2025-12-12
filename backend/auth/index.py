@@ -183,6 +183,47 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'message': 'Пароль успешно изменен'}),
                     'isBase64Encoded': False
                 }
+            
+            elif action == 'update_signature':
+                auth_token = event.get('headers', {}).get('x-auth-token')
+                if not auth_token:
+                    return {
+                        'statusCode': 401,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Требуется авторизация'}),
+                        'isBase64Encoded': False
+                    }
+                
+                doctor_id = body_data.get('doctor_id')
+                signature_url = body_data.get('signature_url')
+                
+                if not doctor_id or not signature_url:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Все поля обязательны'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cur.execute(
+                    "UPDATE doctors SET signature_url = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+                    (signature_url, doctor_id)
+                )
+                conn.commit()
+                
+                cur.execute(
+                    "SELECT id, email, full_name, specialization, signature_url, created_at FROM doctors WHERE id = %s",
+                    (doctor_id,)
+                )
+                doctor = dict(cur.fetchone())
+                doctor['created_at'] = doctor['created_at'].isoformat() if doctor['created_at'] else None
+                
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'message': 'Подпись обновлена', 'doctor': doctor}),
+                    'isBase64Encoded': False
+                }
         
         elif method == 'GET':
             auth_token = event.get('headers', {}).get('x-auth-token')
