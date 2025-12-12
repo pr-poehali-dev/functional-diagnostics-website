@@ -28,8 +28,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, x-auth-token',
                 'Access-Control-Max-Age': '86400'
             },
             'body': '',
@@ -185,7 +185,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             elif action == 'update_signature':
-                auth_token = event.get('headers', {}).get('x-auth-token')
+                headers_dict = event.get('headers', {})
+                auth_token = headers_dict.get('x-auth-token') or headers_dict.get('X-Auth-Token')
                 if not auth_token:
                     return {
                         'statusCode': 401,
