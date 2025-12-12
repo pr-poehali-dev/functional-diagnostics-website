@@ -69,9 +69,15 @@ const DoctorSettings = () => {
     }
 
     setIsLoading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
+    const reader = new FileReader();
+    
+    reader.onerror = () => {
+      toast.error('Ошибка чтения файла');
+      setIsLoading(false);
+    };
+    
+    reader.onload = async (e) => {
+      try {
         const base64 = e.target?.result as string;
         
         const response = await fetch(AUTH_API, {
@@ -96,13 +102,14 @@ const DoctorSettings = () => {
         updateDoctor(data.doctor);
         toast.success('Подпись сохранена');
         setSignatureFile(null);
-      };
-      reader.readAsDataURL(signatureFile);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Ошибка загрузки подписи');
-    } finally {
-      setIsLoading(false);
-    }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Ошибка загрузки подписи');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    reader.readAsDataURL(signatureFile);
   };
 
   return (
