@@ -52,9 +52,11 @@ export const ClinicSettings = () => {
     
     reader.onload = (event) => {
       const logoUrl = event.target?.result as string;
-      setSettings(prev => ({ ...prev, logoUrl }));
+      const newSettings = { ...settings, logoUrl };
+      setSettings(newSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
       setUploading(false);
-      toast.success('Логотип загружен');
+      toast.success('Логотип загружен и сохранён');
     };
 
     reader.onerror = () => {
@@ -66,8 +68,10 @@ export const ClinicSettings = () => {
   };
 
   const handleRemoveLogo = () => {
-    setSettings(prev => ({ ...prev, logoUrl: null }));
-    toast.success('Логотип удален');
+    const newSettings = { ...settings, logoUrl: null };
+    setSettings(newSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+    toast.success('Логотип удалён и изменения сохранены');
   };
 
   return (
