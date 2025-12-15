@@ -9,6 +9,7 @@ import PatientDataForm from '@/components/PatientDataForm';
 import StudyParametersForm from '@/components/StudyParametersForm';
 import ProtocolArchive from '@/components/ProtocolArchive';
 import DoctorSettings from '@/components/DoctorSettings';
+import { ClinicSettings } from '@/components/ClinicSettings';
 
 type MainTabsProps = {
   activeTab: string;
@@ -244,6 +245,7 @@ const MainTabs = ({
 
       <TabsContent value="settings" className="space-y-6">
         <DoctorSettings />
+        <ClinicSettings />
       </TabsContent>
 
       <TabsContent value="archive" className="space-y-6">

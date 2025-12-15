@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 import { Protocol, studyTypes } from '@/types/medical';
+import { getClinicSettings } from './ClinicSettings';
 
 type Doctor = {
   id: number;
@@ -33,39 +34,75 @@ const transliterate = (text: string): string => {
 export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExporterProps) => {
   const exportToPDF = (protocol: Protocol) => {
     const pdf = new jsPDF();
+    const clinicSettings = getClinicSettings();
+    
+    let yPosition = 20;
+    
+    if (clinicSettings.logoUrl) {
+      try {
+        pdf.addImage(clinicSettings.logoUrl, 'PNG', 20, yPosition, 30, 30);
+      } catch (e) {
+        console.error('Error adding logo:', e);
+      }
+    }
+    
+    if (clinicSettings.clinicName || clinicSettings.logoUrl) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text(transliterate(clinicSettings.clinicName || ''), clinicSettings.logoUrl ? 55 : 20, yPosition + 5);
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      if (clinicSettings.clinicAddress) {
+        pdf.text(transliterate(clinicSettings.clinicAddress), clinicSettings.logoUrl ? 55 : 20, yPosition + 12);
+      }
+      if (clinicSettings.clinicPhone) {
+        pdf.text(transliterate(clinicSettings.clinicPhone), clinicSettings.logoUrl ? 55 : 20, yPosition + 18);
+      }
+      
+      yPosition += 40;
+      pdf.line(20, yPosition - 5, 190, yPosition - 5);
+    }
     
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
-    pdf.text('PROTOKOL ISSLEDOVANIYA', 105, 20, { align: 'center' });
+    pdf.text('PROTOKOL ISSLEDOVANIYA', 105, yPosition, { align: 'center' });
+    yPosition += 5;
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text(`Tip issledovaniya: ${transliterate(protocol.studyType)}`, 20, 35);
-    pdf.text(`Data issledovaniya: ${protocol.patientData.studyDate}`, 20, 43);
+    yPosition += 10;
+    pdf.text(`Tip issledovaniya: ${transliterate(protocol.studyType)}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Data issledovaniya: ${protocol.patientData.studyDate}`, 20, yPosition);
     
+    yPosition += 12;
     pdf.setFont('helvetica', 'bold');
-    pdf.text('DANNYE PACIENTA:', 20, 55);
+    pdf.text('DANNYE PACIENTA:', 20, yPosition);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`FIO: ${transliterate(protocol.patientName)}`, 20, 63);
-    pdf.text(`Pol: ${protocol.patientData.gender === 'male' ? 'Muzhskoj' : 'Zhenskij'}`, 20, 71);
-    pdf.text(`Data rozhdeniya: ${protocol.patientData.birthDate} (vozrast: ${protocol.patientData.age} let)`, 20, 79);
+    yPosition += 8;
+    pdf.text(`FIO: ${transliterate(protocol.patientName)}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Pol: ${protocol.patientData.gender === 'male' ? 'Muzhskoj' : 'Zhenskij'}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Data rozhdeniya: ${protocol.patientData.birthDate} (vozrast: ${protocol.patientData.age} let)`, 20, yPosition);
     
-    let yPos = 87;
+    yPosition += 8;
     if (protocol.patientData.weight && protocol.patientData.height) {
-      pdf.text(`Massa: ${protocol.patientData.weight} kg, Rost: ${protocol.patientData.height} sm`, 20, yPos);
-      yPos += 8;
+      pdf.text(`Massa: ${protocol.patientData.weight} kg, Rost: ${protocol.patientData.height} sm`, 20, yPosition);
+      yPosition += 8;
       if (protocol.patientData.bsa) {
-        pdf.text(`Ploshchad' poverhnosti tela: ${protocol.patientData.bsa.toFixed(2)} m2`, 20, yPos);
-        yPos += 8;
+        pdf.text(`Ploshchad' poverhnosti tela: ${protocol.patientData.bsa.toFixed(2)} m2`, 20, yPosition);
+        yPosition += 8;
       }
     }
     if (protocol.patientData.ultrasoundDevice) {
-      pdf.text(`UZ apparat: ${transliterate(protocol.patientData.ultrasoundDevice)}`, 20, yPos);
-      yPos += 8;
+      pdf.text(`UZ apparat: ${transliterate(protocol.patientData.ultrasoundDevice)}`, 20, yPosition);
+      yPosition += 8;
     }
     
     pdf.setFont('helvetica', 'bold');
-    let yPosition = yPos + 4;
+    yPosition += 4;
     pdf.text('POKAZATELI:', 20, yPosition);
     yPosition += 8;
     
@@ -160,6 +197,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
       return;
     }
 
+    const clinicSettings = getClinicSettings();
     const study = studyTypes.find(s => s.name === protocol.studyType);
     
     const parametersHTML = study ? Object.entries(protocol.results).map(([key, value]) => {
@@ -199,15 +237,31 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
               color: #1f2937;
             }
             .header {
-              text-align: center;
               border-bottom: 3px solid #0ea5e9;
               padding-bottom: 20px;
               margin-bottom: 30px;
+              display: flex;
+              align-items: center;
+              gap: 20px;
+            }
+            .header-logo {
+              max-width: 80px;
+              max-height: 80px;
+              object-fit: contain;
+            }
+            .header-info {
+              flex: 1;
             }
             .header h1 {
-              margin: 0;
+              margin: 0 0 5px 0;
               color: #0ea5e9;
               font-size: 24px;
+            }
+            .clinic-info {
+              margin: 0;
+              color: #6b7280;
+              font-size: 14px;
+              line-height: 1.6;
             }
             .info-section {
               margin-bottom: 30px;
@@ -271,7 +325,16 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
           <button class="print-button no-print" onclick="window.print()">🖨️ Печать</button>
           
           <div class="header">
-            <h1>ПРОТОКОЛ ФУНКЦИОНАЛЬНОЙ ДИАГНОСТИКИ</h1>
+            ${clinicSettings.logoUrl ? `<img src="${clinicSettings.logoUrl}" alt="Логотип" class="header-logo" />` : ''}
+            <div class="header-info">
+              ${clinicSettings.clinicName ? `<h1>${clinicSettings.clinicName}</h1>` : '<h1>ПРОТОКОЛ ФУНКЦИОНАЛЬНОЙ ДИАГНОСТИКИ</h1>'}
+              ${clinicSettings.clinicAddress || clinicSettings.clinicPhone ? `
+                <p class="clinic-info">
+                  ${clinicSettings.clinicAddress ? clinicSettings.clinicAddress + '<br>' : ''}
+                  ${clinicSettings.clinicPhone ? 'Тел: ' + clinicSettings.clinicPhone : ''}
+                </p>
+              ` : ''}
+            </div>
           </div>
           
           <div class="info-section">
