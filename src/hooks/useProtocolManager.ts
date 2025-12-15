@@ -71,13 +71,26 @@ export const useProtocolManager = (authToken: string | null) => {
     toast.success('Данные сохранены');
   };
 
+  const loadFieldOrder = (studyId: string): string[] => {
+    const saved = localStorage.getItem(`field_order_${studyId}`);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [];
+  };
+
+  const saveFieldOrder = (studyId: string, order: string[]) => {
+    localStorage.setItem(`field_order_${studyId}`, JSON.stringify(order));
+  };
+
   const openQuickInput = () => {
     if (!selectedStudy) {
       toast.error('Выберите тип исследования');
       return;
     }
-    const defaultOrder = selectedStudy.parameters.map(p => p.id);
-    setFieldOrder(defaultOrder);
+    const savedOrder = loadFieldOrder(selectedStudy.id);
+    const order = savedOrder.length > 0 ? savedOrder : selectedStudy.parameters.map(p => p.id);
+    setFieldOrder(order);
     setIsQuickInputOpen(true);
   };
 
@@ -165,5 +178,7 @@ export const useProtocolManager = (authToken: string | null) => {
     getParameterStatus,
     generateConclusion,
     handleGenerateProtocol,
+    saveFieldOrder,
+    loadFieldOrder,
   };
 };

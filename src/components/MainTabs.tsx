@@ -33,6 +33,7 @@ type MainTabsProps = {
   importProtocols: (protocols: any[]) => Promise<void>;
   exportToPDF: (protocol: Protocol) => void;
   printProtocol: (protocol: Protocol) => void;
+  onOpenFieldOrderSettings: () => void;
 };
 
 const MainTabs = ({
@@ -57,6 +58,7 @@ const MainTabs = ({
   importProtocols,
   exportToPDF,
   printProtocol,
+  onOpenFieldOrderSettings,
 }: MainTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -244,7 +246,10 @@ const MainTabs = ({
       </TabsContent>
 
       <TabsContent value="settings" className="space-y-6">
-        <DoctorSettings />
+        <DoctorSettings 
+          selectedStudy={selectedStudy}
+          onOpenFieldOrderSettings={onOpenFieldOrderSettings}
+        />
         <ClinicSettings />
       </TabsContent>
 

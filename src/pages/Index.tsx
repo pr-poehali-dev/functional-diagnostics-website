@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthForm from '@/components/AuthForm';
 import AppHeader from '@/components/AppHeader';
 import MainTabs from '@/components/MainTabs';
 import QuickInputModal from '@/components/QuickInputModal';
+import { FieldOrderSettings } from '@/components/FieldOrderSettings';
 import { useProtocolManager } from '@/hooks/useProtocolManager';
 import { useProtocolExporter } from '@/components/ProtocolExporter';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { doctor, isLoading: authLoading, logout } = useAuth();
+  const [isFieldOrderOpen, setIsFieldOrderOpen] = useState(false);
 
   const {
     selectedStudy,
@@ -27,6 +31,7 @@ const Index = () => {
     isQuickInputOpen,
     setIsQuickInputOpen,
     fieldOrder,
+    setFieldOrder,
     handlePatientDataChange,
     handleParameterChange,
     handleQuickInputSave,
@@ -34,12 +39,32 @@ const Index = () => {
     getParameterStatus,
     generateConclusion,
     handleGenerateProtocol,
+    saveFieldOrder,
+    loadFieldOrder,
   } = useProtocolManager(doctor?.email || null);
 
   const { exportToPDF, printProtocol } = useProtocolExporter({
     doctor,
     getParameterStatus,
   });
+
+  const handleOpenFieldOrderSettings = () => {
+    if (!selectedStudy) {
+      toast.error('Сначала выберите тип исследования');
+      return;
+    }
+    const currentOrder = loadFieldOrder(selectedStudy.id);
+    const order = currentOrder.length > 0 ? currentOrder : selectedStudy.parameters.map(p => p.id);
+    setFieldOrder(order);
+    setIsFieldOrderOpen(true);
+  };
+
+  const handleSaveFieldOrder = (order: string[]) => {
+    if (selectedStudy) {
+      saveFieldOrder(selectedStudy.id, order);
+      setFieldOrder(order);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -80,18 +105,29 @@ const Index = () => {
           importProtocols={importProtocols}
           exportToPDF={exportToPDF}
           printProtocol={printProtocol}
+          onOpenFieldOrderSettings={handleOpenFieldOrderSettings}
         />
       </main>
 
       {selectedStudy && (
-        <QuickInputModal
-          isOpen={isQuickInputOpen}
-          onClose={() => setIsQuickInputOpen(false)}
-          parameters={selectedStudy.parameters}
-          fieldOrder={fieldOrder}
-          values={parameters}
-          onSave={handleQuickInputSave}
-        />
+        <>
+          <QuickInputModal
+            isOpen={isQuickInputOpen}
+            onClose={() => setIsQuickInputOpen(false)}
+            parameters={selectedStudy.parameters}
+            fieldOrder={fieldOrder}
+            values={parameters}
+            onSave={handleQuickInputSave}
+          />
+          
+          <FieldOrderSettings
+            isOpen={isFieldOrderOpen}
+            onClose={() => setIsFieldOrderOpen(false)}
+            parameters={selectedStudy.parameters}
+            currentOrder={fieldOrder}
+            onSave={handleSaveFieldOrder}
+          />
+        </>
       )}
     </div>
   );

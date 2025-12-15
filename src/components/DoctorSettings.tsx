@@ -7,11 +7,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { FieldOrderSettings } from '@/components/FieldOrderSettings';
+import { StudyType } from '@/types/medical';
 
 const SETTINGS_API = 'https://functions.poehali.dev/10cc71ce-7a44-485c-a1ba-83e4856376e8';
 const AUTH_API = 'https://functions.poehali.dev/cb9f0144-d0fa-40cf-ad86-40d1679b4f73';
 
-const DoctorSettings = () => {
+type DoctorSettingsProps = {
+  selectedStudy: StudyType | null;
+  onOpenFieldOrderSettings: () => void;
+};
+
+const DoctorSettings = ({ selectedStudy, onOpenFieldOrderSettings }: DoctorSettingsProps) => {
   const { doctor, token, updateDoctor } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -265,6 +272,28 @@ const DoctorSettings = () => {
           <CardDescription>Персонализация работы системы</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-start gap-3 p-4 bg-secondary/50 rounded-lg">
+            <Icon name="ListOrdered" size={20} className="mt-1 text-primary" />
+            <div className="flex-1">
+              <h4 className="font-medium mb-1">Порядок полей быстрого ввода</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                {selectedStudy 
+                  ? `Настройте последовательность ввода полей для исследования "${selectedStudy.name}"`
+                  : 'Выберите тип исследования в разделе "Главная" или "Калькулятор", чтобы настроить порядок полей'
+                }
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onOpenFieldOrderSettings}
+                disabled={!selectedStudy}
+              >
+                <Icon name="Settings" size={16} className="mr-2" />
+                Настроить порядок
+              </Button>
+            </div>
+          </div>
+
           <div className="flex items-start gap-3 p-4 bg-secondary/50 rounded-lg">
             <Icon name="Sliders" size={20} className="mt-1 text-primary" />
             <div>
