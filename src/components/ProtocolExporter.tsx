@@ -16,94 +16,139 @@ type ProtocolExporterProps = {
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
 };
 
+const transliterate = (text: string): string => {
+  const map: Record<string, string> = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+    'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'E', 'Ж': 'Zh', 'З': 'Z',
+    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
+    'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
+    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  return text.split('').map(char => map[char] || char).join('');
+};
+
 export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExporterProps) => {
   const exportToPDF = (protocol: Protocol) => {
     const pdf = new jsPDF();
     
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
-    pdf.text('ПРОТОКОЛ ИССЛЕДОВАНИЯ', 105, 20, { align: 'center' });
+    pdf.text('PROTOKOL ISSLEDOVANIYA', 105, 20, { align: 'center' });
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text(`Тип исследования: ${protocol.studyType}`, 20, 35);
-    pdf.text(`Дата исследования: ${protocol.patientData.studyDate}`, 20, 43);
+    pdf.text(`Tip issledovaniya: ${transliterate(protocol.studyType)}`, 20, 35);
+    pdf.text(`Data issledovaniya: ${protocol.patientData.studyDate}`, 20, 43);
     
     pdf.setFont('helvetica', 'bold');
-    pdf.text('ДАННЫЕ ПАЦИЕНТА:', 20, 55);
+    pdf.text('DANNYE PACIENTA:', 20, 55);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`ФИО: ${protocol.patientName}`, 20, 63);
-    pdf.text(`Пол: ${protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский'}`, 20, 71);
-    pdf.text(`Дата рождения: ${protocol.patientData.birthDate} (возраст: ${protocol.patientData.age} лет)`, 20, 79);
+    pdf.text(`FIO: ${transliterate(protocol.patientName)}`, 20, 63);
+    pdf.text(`Pol: ${protocol.patientData.gender === 'male' ? 'Muzhskoj' : 'Zhenskij'}`, 20, 71);
+    pdf.text(`Data rozhdeniya: ${protocol.patientData.birthDate} (vozrast: ${protocol.patientData.age} let)`, 20, 79);
     
     let yPos = 87;
     if (protocol.patientData.weight && protocol.patientData.height) {
-      pdf.text(`Масса: ${protocol.patientData.weight} кг, Рост: ${protocol.patientData.height} см`, 20, yPos);
+      pdf.text(`Massa: ${protocol.patientData.weight} kg, Rost: ${protocol.patientData.height} sm`, 20, yPos);
       yPos += 8;
       if (protocol.patientData.bsa) {
-        pdf.text(`Площадь поверхности тела: ${protocol.patientData.bsa.toFixed(2)} м\u00B2`, 20, yPos);
+        pdf.text(`Ploshchad' poverhnosti tela: ${protocol.patientData.bsa.toFixed(2)} m2`, 20, yPos);
         yPos += 8;
       }
     }
     if (protocol.patientData.ultrasoundDevice) {
-      pdf.text(`УЗ аппарат: ${protocol.patientData.ultrasoundDevice}`, 20, yPos);
+      pdf.text(`UZ apparat: ${transliterate(protocol.patientData.ultrasoundDevice)}`, 20, yPos);
       yPos += 8;
     }
     
     pdf.setFont('helvetica', 'bold');
     let yPosition = yPos + 4;
-    pdf.text('ПОКАЗАТЕЛИ:', 20, yPosition);
+    pdf.text('POKAZATELI:', 20, yPosition);
+    yPosition += 8;
     
     const study = studyTypes.find(s => s.name === protocol.studyType);
-    yPosition += 10;
     
     if (study) {
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.rect(20, yPosition, 170, 8);
+      pdf.text('Parametr', 22, yPosition + 5);
+      pdf.text('Znachenie', 80, yPosition + 5);
+      pdf.text('Norma', 120, yPosition + 5);
+      pdf.text('Status', 155, yPosition + 5);
+      yPosition += 8;
+      
       pdf.setFont('helvetica', 'normal');
       Object.entries(protocol.results).forEach(([key, value]) => {
         const param = study.parameters.find(p => p.id === key);
         if (param) {
           const status = getParameterStatus(value, param.normalRange);
-          const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Погр.' : 'Откл.';
-          const normalRange = `${param.normalRange.min}-${param.normalRange.max} ${param.unit}`;
+          const statusText = status === 'success' ? 'OK' : status === 'warning' ? '!' : '!!';
+          const normalRange = `${param.normalRange.min}-${param.normalRange.max}`;
           
-          pdf.text(`${param.name}: ${value} ${param.unit} [${statusText}] (Норма: ${normalRange})`, 25, yPosition);
-          yPosition += 8;
+          pdf.rect(20, yPosition, 170, 7);
+          pdf.text(transliterate(param.name), 22, yPosition + 5);
+          pdf.text(`${value} ${transliterate(param.unit)}`, 80, yPosition + 5);
+          pdf.text(normalRange, 120, yPosition + 5);
+          pdf.text(statusText, 155, yPosition + 5);
+          yPosition += 7;
         }
       });
+      yPosition += 3;
     }
     
     yPosition += 5;
+    pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('ЗАКЛЮЧЕНИЕ:', 20, yPosition);
+    pdf.text('ZAKLYUCHENIE:', 20, yPosition);
     
     yPosition += 10;
     pdf.setFont('helvetica', 'normal');
-    const conclusionLines = pdf.splitTextToSize(protocol.conclusion, 170);
+    pdf.setFontSize(11);
+    const conclusionLines = pdf.splitTextToSize(transliterate(protocol.conclusion), 170);
     pdf.text(conclusionLines, 20, yPosition);
     
     yPosition += conclusionLines.length * 7 + 15;
+    
+    if (yPosition > 250) {
+      pdf.addPage();
+      yPosition = 20;
+    }
+    
     pdf.setFontSize(10);
+    
+    const signatureY = yPosition;
     
     if (doctor?.signature_url) {
       try {
-        pdf.addImage(doctor.signature_url, 'PNG', 20, yPosition, 50, 20);
-        yPosition += 25;
+        pdf.addImage(doctor.signature_url, 'PNG', 20, signatureY, 50, 20);
+        yPosition = signatureY + 25;
       } catch (e) {
-        pdf.text('_______________________', 20, yPosition);
-        yPosition += 7;
+        pdf.text('_______________________', 20, signatureY);
+        yPosition = signatureY + 7;
       }
     } else {
-      pdf.text('_______________________', 20, yPosition);
-      yPosition += 7;
+      pdf.text('_______________________', 20, signatureY);
+      yPosition = signatureY + 7;
     }
     
-    pdf.text('Подпись врача', 20, yPosition);
+    pdf.text('Podpis vracha', 20, yPosition);
     pdf.setFontSize(9);
-    pdf.text(`${doctor?.full_name} (${doctor?.specialization || 'Врач'})`, 20, yPosition + 5);
+    pdf.text(`${transliterate(doctor?.full_name || '')} (${transliterate(doctor?.specialization || 'Vrach')})`, 20, yPosition + 5);
     
-    const fileName = `protocol_${protocol.patientName}_${protocol.studyType}_${protocol.patientData.studyDate}.pdf`
+    const dateY = signatureY;
+    pdf.setFontSize(10);
+    pdf.text('_______________________', 130, dateY);
+    pdf.text('Data', 130, dateY + 7);
+    pdf.setFontSize(9);
+    pdf.text(protocol.date || new Date().toLocaleDateString('ru-RU'), 130, dateY + 12);
+    
+    const fileName = `protocol_${transliterate(protocol.patientName)}_${transliterate(protocol.studyType)}_${protocol.patientData.studyDate}.pdf`
       .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Zа-яА-Я0-9._-]/g, '');
+      .replace(/[^a-zA-Z0-9._-]/g, '');
     pdf.save(fileName);
     toast.success('PDF протокол успешно сохранён');
   };
@@ -308,6 +353,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
             <div>
               <div class="signature-line"></div>
               <p style="margin-top: 5px; font-size: 14px;">Дата</p>
+              <p style="margin-top: 2px; font-size: 12px; color: #6b7280;">${protocol.date || new Date().toLocaleDateString('ru-RU')}</p>
             </div>
           </div>
         </body>
