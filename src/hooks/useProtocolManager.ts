@@ -29,16 +29,48 @@ export const useProtocolManager = (authToken: string | null) => {
     importProtocols,
   } = useProtocolsAPI(authToken);
 
-  const calculateAge = (birthDate: string): number => {
-    if (!birthDate) return 0;
+  const calculateAge = (birthDate: string): string => {
+    if (!birthDate) return '';
+    
     const today = new Date();
     const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    let days = today.getDate() - birth.getDate();
+    
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += prevMonth.getDate();
     }
-    return age;
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    const totalDays = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (totalDays < 31) {
+      return `${totalDays} ${totalDays === 1 ? 'день' : totalDays < 5 ? 'дня' : 'дней'}`;
+    }
+    
+    if (years < 1) {
+      if (days === 0) {
+        return `${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}`;
+      }
+      return `${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'} ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`;
+    }
+    
+    if (years < 10) {
+      if (months === 0) {
+        return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`;
+      }
+      return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'} ${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}`;
+    }
+    
+    return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`;
   };
 
   const calculateBSA = (weight: number, height: number): number => {

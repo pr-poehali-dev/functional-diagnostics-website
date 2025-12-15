@@ -254,7 +254,8 @@ const ProtocolArchive = ({
                         <CardDescription className="space-y-1">
                           <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
                           <div className="text-xs">
-                            {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}, {protocol.patientData.age} лет
+                            {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}
+                            {protocol.patientData.age && <>, {protocol.patientData.age}</>}
                             {protocol.patientData.weight && protocol.patientData.height && (
                               <> • {protocol.patientData.weight}кг, {protocol.patientData.height}см</>
                             )}

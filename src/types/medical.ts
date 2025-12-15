@@ -17,7 +17,7 @@ export type PatientData = {
   name: string;
   gender: 'male' | 'female' | '';
   birthDate: string;
-  age?: number;
+  age?: string;
   weight: string;
   height: string;
   bsa?: number;

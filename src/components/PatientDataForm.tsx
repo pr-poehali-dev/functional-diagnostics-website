@@ -59,11 +59,11 @@ const PatientDataForm = ({ patientData, onPatientDataChange }: PatientDataFormPr
             />
           </div>
           
-          {patientData.birthDate && (
+          {patientData.birthDate && patientData.age && (
             <div className="space-y-2">
               <Label>Возраст</Label>
               <Input
-                value={`${patientData.age} лет`}
+                value={patientData.age}
                 disabled
                 className="bg-secondary"
               />

@@ -85,7 +85,8 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
     yPosition += 8;
     pdf.text(`Pol: ${protocol.patientData.gender === 'male' ? 'Muzhskoj' : 'Zhenskij'}`, 20, yPosition);
     yPosition += 8;
-    pdf.text(`Data rozhdeniya: ${protocol.patientData.birthDate} (vozrast: ${protocol.patientData.age} let)`, 20, yPosition);
+    const ageText = protocol.patientData.age ? transliterate(` (vozrast: ${protocol.patientData.age})`) : '';
+    pdf.text(`Data rozhdeniya: ${protocol.patientData.birthDate}${ageText}`, 20, yPosition);
     
     yPosition += 8;
     if (protocol.patientData.weight && protocol.patientData.height) {
@@ -361,7 +362,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
             </div>
             <div class="info-row">
               <span class="info-label">Дата рождения:</span>
-              <span>${protocol.patientData.birthDate} (возраст: ${protocol.patientData.age} лет)</span>
+              <span>${protocol.patientData.birthDate}${protocol.patientData.age ? ` (возраст: ${protocol.patientData.age})` : ''}</span>
             </div>
             ${protocol.patientData.weight ? `
             <div class="info-row">
