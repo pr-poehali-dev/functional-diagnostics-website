@@ -184,6 +184,59 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
+            elif action == 'update_profile':
+                headers_dict = event.get('headers', {})
+                auth_token = headers_dict.get('x-auth-token') or headers_dict.get('X-Auth-Token')
+                if not auth_token:
+                    return {
+                        'statusCode': 401,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Требуется авторизация'}),
+                        'isBase64Encoded': False
+                    }
+                
+                doctor_id = body_data.get('doctor_id')
+                full_name = body_data.get('full_name', '').strip()
+                email = body_data.get('email', '').strip().lower()
+                specialization = body_data.get('specialization', '').strip()
+                
+                if not doctor_id or not full_name or not email:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'ФИО и Email обязательны'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cur.execute("SELECT id FROM doctors WHERE email = %s AND id != %s", (email, doctor_id))
+                if cur.fetchone():
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Email уже используется другим врачом'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cur.execute(
+                    "UPDATE doctors SET full_name = %s, email = %s, specialization = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+                    (full_name, email, specialization, doctor_id)
+                )
+                conn.commit()
+                
+                cur.execute(
+                    "SELECT id, email, full_name, specialization, signature_url, created_at FROM doctors WHERE id = %s",
+                    (doctor_id,)
+                )
+                doctor = dict(cur.fetchone())
+                doctor['created_at'] = doctor['created_at'].isoformat() if doctor['created_at'] else None
+                
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'message': 'Профиль обновлён', 'doctor': doctor}),
+                    'isBase64Encoded': False
+                }
+            
             elif action == 'update_signature':
                 headers_dict = event.get('headers', {})
                 auth_token = headers_dict.get('x-auth-token') or headers_dict.get('X-Auth-Token')

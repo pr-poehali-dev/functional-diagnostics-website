@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,12 +17,65 @@ type DoctorSettingsProps = {
 const DoctorSettings = ({ onOpenFieldOrderSettings }: DoctorSettingsProps) => {
   const { doctor, token, updateDoctor } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    full_name: doctor?.full_name || '',
+    email: doctor?.email || '',
+    specialization: doctor?.specialization || '',
+  });
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
   const [signatureFile, setSignatureFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (doctor) {
+      setProfileData({
+        full_name: doctor.full_name || '',
+        email: doctor.email || '',
+        specialization: doctor.specialization || '',
+      });
+    }
+  }, [doctor]);
+
+  const handleProfileUpdate = async () => {
+    if (!profileData.full_name || !profileData.email) {
+      toast.error('ФИО и Email обязательны для заполнения');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(AUTH_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          action: 'update_profile',
+          doctor_id: doctor?.id,
+          full_name: profileData.full_name,
+          email: profileData.email,
+          specialization: profileData.specialization,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Ошибка обновления профиля');
+      }
+
+      const data = await response.json();
+      updateDoctor(data.doctor);
+      toast.success('Профиль обновлён');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Ошибка обновления профиля');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -127,17 +180,46 @@ const DoctorSettings = ({ onOpenFieldOrderSettings }: DoctorSettingsProps) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>ФИО</Label>
-            <Input value={doctor?.full_name} disabled className="bg-secondary" />
+            <Label htmlFor="full_name">ФИО</Label>
+            <Input
+              id="full_name"
+              value={profileData.full_name}
+              onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+              placeholder="Иванов Иван Иванович"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={doctor?.email} disabled className="bg-secondary" />
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={profileData.email}
+              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              placeholder="doctor@example.com"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Специализация</Label>
-            <Input value={doctor?.specialization || 'Не указана'} disabled className="bg-secondary" />
+            <Label htmlFor="specialization">Специализация</Label>
+            <Input
+              id="specialization"
+              value={profileData.specialization}
+              onChange={(e) => setProfileData({ ...profileData, specialization: e.target.value })}
+              placeholder="Кардиолог"
+            />
           </div>
+          <Button onClick={handleProfileUpdate} disabled={isLoading} className="w-full">
+            {isLoading ? (
+              <>
+                <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
+                Сохранение...
+              </>
+            ) : (
+              <>
+                <Icon name="Save" className="mr-2" size={18} />
+                Сохранить изменения
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
