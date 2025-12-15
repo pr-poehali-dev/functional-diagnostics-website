@@ -45,7 +45,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
           name: p.patient_name,
           gender: p.patient_gender,
           birthDate: p.patient_birth_date,
-          age: p.patient_age || 0,
+          age: p.patient_age || '',
           weight: p.patient_weight?.toString() || '',
           height: p.patient_height?.toString() || '',
           bsa: p.patient_bsa || 0,
@@ -54,6 +54,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
         },
         results: p.results,
         conclusion: p.conclusion,
+        signed: p.signed || false,
       }));
       
       setProtocols(mappedProtocols);
@@ -91,6 +92,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
           study_date: protocol.patientData.studyDate,
           results: protocol.results,
           conclusion: protocol.conclusion,
+          signed: protocol.signed || false,
         }),
       });
 
@@ -133,6 +135,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
       }
       if (updates.results) payload.results = updates.results;
       if (updates.conclusion) payload.conclusion = updates.conclusion;
+      if (updates.signed !== undefined) payload.signed = updates.signed;
 
       const response = await fetch(API_URL, {
         method: 'PUT',

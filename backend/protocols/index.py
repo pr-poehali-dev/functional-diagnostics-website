@@ -51,7 +51,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SELECT id, doctor_id, study_type, patient_name, patient_gender, 
                            patient_birth_date, patient_age, patient_weight, patient_height, 
                            patient_bsa, ultrasound_device, study_date, results, conclusion, 
-                           created_at 
+                           signed, created_at 
                     FROM t_p13795046_functional_diagnosti.protocols 
                     WHERE id = %s
                 """, (protocol_id,))
@@ -115,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SELECT id, doctor_id, study_type, patient_name, patient_gender, 
                            patient_birth_date, patient_age, patient_weight, patient_height, 
                            patient_bsa, ultrasound_device, study_date, results, conclusion, 
-                           created_at 
+                           signed, created_at 
                     FROM t_p13795046_functional_diagnosti.protocols 
                     {where_sql}
                     ORDER BY {sort_by} {sort_order}
@@ -173,8 +173,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 INSERT INTO t_p13795046_functional_diagnosti.protocols 
                 (doctor_id, study_type, patient_name, patient_gender, patient_birth_date, 
                  patient_age, patient_weight, patient_height, patient_bsa, ultrasound_device, 
-                 study_date, results, conclusion, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                 study_date, results, conclusion, signed, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 RETURNING id
             """, (
                 doctor_id,
@@ -189,7 +189,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data.get('ultrasound_device'),
                 body_data['study_date'],
                 json.dumps(body_data['results']),
-                body_data['conclusion']
+                body_data['conclusion'],
+                body_data.get('signed', False)
             ))
             
             protocol_id = cur.fetchone()[0]
@@ -284,6 +285,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if 'conclusion' in body_data:
                 update_fields.append("conclusion = %s")
                 params.append(body_data['conclusion'])
+            
+            if 'signed' in body_data:
+                update_fields.append("signed = %s")
+                params.append(body_data['signed'])
             
             if not update_fields:
                 return {
@@ -391,5 +396,6 @@ def format_protocol_row(row: tuple) -> Dict[str, Any]:
         'study_date': row[11].isoformat() if row[11] else None,
         'results': row[12],
         'conclusion': row[13],
-        'created_at': row[14].isoformat() if row[14] else None
+        'signed': row[14],
+        'created_at': row[15].isoformat() if row[15] else None
     }
