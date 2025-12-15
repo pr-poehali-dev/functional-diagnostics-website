@@ -49,19 +49,12 @@ const Index = () => {
   });
 
   const handleOpenFieldOrderSettings = () => {
-    if (!selectedStudy) {
-      toast.error('Сначала выберите тип исследования');
-      return;
-    }
-    const currentOrder = loadFieldOrder(selectedStudy.id);
-    const order = currentOrder.length > 0 ? currentOrder : selectedStudy.parameters.map(p => p.id);
-    setFieldOrder(order);
     setIsFieldOrderOpen(true);
   };
 
-  const handleSaveFieldOrder = (order: string[]) => {
-    if (selectedStudy) {
-      saveFieldOrder(selectedStudy.id, order);
+  const handleSaveFieldOrder = (studyId: string, order: string[]) => {
+    saveFieldOrder(studyId, order);
+    if (selectedStudy && selectedStudy.id === studyId) {
       setFieldOrder(order);
     }
   };
@@ -110,25 +103,22 @@ const Index = () => {
       </main>
 
       {selectedStudy && (
-        <>
-          <QuickInputModal
-            isOpen={isQuickInputOpen}
-            onClose={() => setIsQuickInputOpen(false)}
-            parameters={selectedStudy.parameters}
-            fieldOrder={fieldOrder}
-            values={parameters}
-            onSave={handleQuickInputSave}
-          />
-          
-          <FieldOrderSettings
-            isOpen={isFieldOrderOpen}
-            onClose={() => setIsFieldOrderOpen(false)}
-            parameters={selectedStudy.parameters}
-            currentOrder={fieldOrder}
-            onSave={handleSaveFieldOrder}
-          />
-        </>
+        <QuickInputModal
+          isOpen={isQuickInputOpen}
+          onClose={() => setIsQuickInputOpen(false)}
+          parameters={selectedStudy.parameters}
+          fieldOrder={fieldOrder}
+          values={parameters}
+          onSave={handleQuickInputSave}
+        />
       )}
+
+      <FieldOrderSettings
+        isOpen={isFieldOrderOpen}
+        onClose={() => setIsFieldOrderOpen(false)}
+        onSave={handleSaveFieldOrder}
+        loadFieldOrder={loadFieldOrder}
+      />
     </div>
   );
 };

@@ -247,7 +247,6 @@ const MainTabs = ({
 
       <TabsContent value="settings" className="space-y-6">
         <DoctorSettings 
-          selectedStudy={selectedStudy}
           onOpenFieldOrderSettings={onOpenFieldOrderSettings}
         />
         <ClinicSettings />
