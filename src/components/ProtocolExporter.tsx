@@ -101,7 +101,10 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
     pdf.setFontSize(9);
     pdf.text(`${doctor?.full_name} (${doctor?.specialization || 'Врач'})`, 20, yPosition + 5);
     
-    pdf.save(`protocol_${protocol.patientName}_${protocol.id}.pdf`);
+    const fileName = `protocol_${protocol.patientName}_${protocol.studyType}_${protocol.patientData.studyDate}.pdf`
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Zа-яА-Я0-9._-]/g, '');
+    pdf.save(fileName);
     toast.success('PDF протокол успешно сохранён');
   };
 
@@ -137,7 +140,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Протокол - ${protocol.patientName}</title>
+          <title>Протокол - ${protocol.patientName} - ${protocol.studyType} - ${protocol.patientData.studyDate}</title>
           <style>
             @media print {
               body { margin: 0; padding: 20px; }

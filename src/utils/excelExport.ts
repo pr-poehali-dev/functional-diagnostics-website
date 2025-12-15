@@ -133,5 +133,8 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Протокол');
 
-  XLSX.writeFile(workbook, `protocol_${protocol.patientName}_${protocol.id}.xlsx`);
+  const fileName = `protocol_${protocol.patientName}_${protocol.studyType}_${protocol.patientData.studyDate}.xlsx`
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Zа-яА-Я0-9._-]/g, '');
+  XLSX.writeFile(workbook, fileName);
 };
