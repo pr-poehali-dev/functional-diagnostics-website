@@ -156,10 +156,10 @@ export const useProtocolManager = (authToken: string | null) => {
     return `${selectedStudy.name}: Выявлены отклонения - ${issues}. Рекомендована консультация специалиста.`;
   };
 
-  const handleGenerateProtocol = async () => {
+  const handleGenerateProtocol = async (signed: boolean = false) => {
     if (!selectedStudy || !patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0) {
       toast.error('Заполните все обязательные поля');
-      return;
+      return null;
     }
 
     const results: Record<string, number> = {};
@@ -176,12 +176,15 @@ export const useProtocolManager = (authToken: string | null) => {
       patientData: { ...patientData },
       results,
       conclusion: generateConclusion(),
+      signed,
     };
 
     const createdId = await createProtocol(protocol);
     if (createdId) {
       setActiveTab('archive');
+      return createdId;
     }
+    return null;
   };
 
   return {

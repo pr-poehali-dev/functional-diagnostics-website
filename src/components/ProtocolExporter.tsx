@@ -222,7 +222,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
           
           <div class="signature">
             <div>
-              ${doctor?.signature_url ? `<img src="${doctor.signature_url}" alt="Подпись" class="signature-image" />` : '<div class="signature-line"></div>'}
+              ${protocol.signed && doctor?.signature_url ? `<img src="${doctor.signature_url}" alt="Подпись" class="signature-image" />` : '<div class="signature-line"></div>'}
               <div style="margin-top: 10px;">
                 <strong>Подпись врача</strong><br>
                 <span style="font-size: 14px;">${doctor?.full_name || ''} (${doctor?.specialization || 'Врач'})</span>
@@ -472,7 +472,7 @@ export const useProtocolExporter = ({ doctor, getParameterStatus }: ProtocolExpo
           
           <div class="signature">
             <div>
-              ${doctor?.signature_url ? `
+              ${protocol.signed && doctor?.signature_url ? `
                 <img src="${doctor.signature_url}" alt="Подпись" style="max-height: 60px; margin-bottom: 10px;" />
               ` : '<div class="signature-line"></div>'}
               <p style="margin-top: 5px; font-size: 14px;">Подпись врача</p>

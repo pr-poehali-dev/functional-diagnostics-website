@@ -6,6 +6,7 @@ import AppHeader from '@/components/AppHeader';
 import MainTabs from '@/components/MainTabs';
 import QuickInputModal from '@/components/QuickInputModal';
 import { FieldOrderSettings } from '@/components/FieldOrderSettings';
+import { SignProtocolDialog } from '@/components/SignProtocolDialog';
 import { useProtocolManager } from '@/hooks/useProtocolManager';
 import { useProtocolExporter } from '@/components/ProtocolExporter';
 import { toast } from 'sonner';
@@ -13,6 +14,8 @@ import { toast } from 'sonner';
 const Index = () => {
   const { doctor, isLoading: authLoading, logout } = useAuth();
   const [isFieldOrderOpen, setIsFieldOrderOpen] = useState(false);
+  const [isSignDialogOpen, setIsSignDialogOpen] = useState(false);
+  const [pendingProtocolData, setPendingProtocolData] = useState<any>(null);
 
   const {
     selectedStudy,
@@ -59,6 +62,24 @@ const Index = () => {
     }
   };
 
+  const handleGenerateProtocolClick = async () => {
+    const result = await handleGenerateProtocol(false);
+    if (result) {
+      setIsSignDialogOpen(true);
+    }
+  };
+
+  const handleSignProtocol = async () => {
+    setIsSignDialogOpen(false);
+    await handleGenerateProtocol(true);
+    toast.success('Протокол подписан и сохранён');
+  };
+
+  const handleSkipSignature = () => {
+    setIsSignDialogOpen(false);
+    toast.success('Протокол сохранён без подписи');
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -89,7 +110,7 @@ const Index = () => {
           openQuickInput={openQuickInput}
           getParameterStatus={getParameterStatus}
           generateConclusion={generateConclusion}
-          handleGenerateProtocol={handleGenerateProtocol}
+          handleGenerateProtocol={handleGenerateProtocolClick}
           protocols={protocols}
           protocolsLoading={protocolsLoading}
           fetchProtocols={fetchProtocols}
@@ -118,6 +139,15 @@ const Index = () => {
         onClose={() => setIsFieldOrderOpen(false)}
         onSave={handleSaveFieldOrder}
         loadFieldOrder={loadFieldOrder}
+      />
+
+      <SignProtocolDialog
+        isOpen={isSignDialogOpen}
+        onClose={() => setIsSignDialogOpen(false)}
+        onSign={handleSignProtocol}
+        onSkip={handleSkipSignature}
+        doctorName={doctor?.full_name}
+        hasSignature={!!doctor?.signature_url}
       />
     </div>
   );

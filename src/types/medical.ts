@@ -33,6 +33,7 @@ export type Protocol = {
   patientData: PatientData;
   results: Record<string, number>;
   conclusion: string;
+  signed?: boolean;
 };
 
 export const studyTypes: StudyType[] = [
