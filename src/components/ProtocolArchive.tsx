@@ -250,7 +250,15 @@ const ProtocolArchive = ({
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <CardTitle className="text-lg">{protocol.patientName}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{protocol.patientName}</CardTitle>
+                          {protocol.signed && (
+                            <div className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                              <Icon name="FileCheck" size={12} />
+                              <span>Подписан</span>
+                            </div>
+                          )}
+                        </div>
                         <CardDescription className="space-y-1">
                           <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
                           <div className="text-xs">
@@ -266,6 +274,19 @@ const ProtocolArchive = ({
                         </CardDescription>
                       </div>
                       <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant={protocol.signed ? "default" : "outline"} 
+                          size="sm" 
+                          onClick={async () => {
+                            const newSignedStatus = !protocol.signed;
+                            await onEditProtocol(protocol.id, { signed: newSignedStatus });
+                            toast.success(newSignedStatus ? 'Протокол подписан' : 'Подпись удалена');
+                          }}
+                          title={protocol.signed ? 'Убрать подпись' : 'Подписать протокол'}
+                        >
+                          <Icon name={protocol.signed ? "FileCheck" : "PenTool"} size={16} className="mr-2" />
+                          {protocol.signed ? 'Подписан' : 'Подписать'}
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => openEditModal(protocol)}>
                           <Icon name="Edit" size={16} className="mr-2" />
                           Редактировать
