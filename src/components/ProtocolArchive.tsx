@@ -334,6 +334,15 @@ const ProtocolArchive = ({
                       <h4 className="font-medium mb-2">Заключение:</h4>
                       <p className="text-sm text-muted-foreground">{protocol.conclusion}</p>
                     </div>
+                    {protocol.date && (
+                      <>
+                        <Separator />
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Icon name="Calendar" size={14} />
+                          Дата создания протокола: {protocol.date}
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               ))}
