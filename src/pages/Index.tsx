@@ -15,7 +15,7 @@ const Index = () => {
   const { doctor, isLoading: authLoading, logout } = useAuth();
   const [isFieldOrderOpen, setIsFieldOrderOpen] = useState(false);
   const [isSignDialogOpen, setIsSignDialogOpen] = useState(false);
-  const [pendingProtocolData, setPendingProtocolData] = useState<any>(null);
+  const [pendingProtocolId, setPendingProtocolId] = useState<string | null>(null);
 
   const {
     selectedStudy,
@@ -65,18 +65,23 @@ const Index = () => {
   const handleGenerateProtocolClick = async () => {
     const result = await handleGenerateProtocol(false);
     if (result) {
+      setPendingProtocolId(result);
       setIsSignDialogOpen(true);
     }
   };
 
   const handleSignProtocol = async () => {
     setIsSignDialogOpen(false);
-    await handleGenerateProtocol(true);
-    toast.success('Протокол подписан и сохранён');
+    if (pendingProtocolId) {
+      await updateProtocol(pendingProtocolId, { signed: true });
+      setPendingProtocolId(null);
+      toast.success('Протокол подписан и сохранён');
+    }
   };
 
   const handleSkipSignature = () => {
     setIsSignDialogOpen(false);
+    setPendingProtocolId(null);
     toast.success('Протокол сохранён без подписи');
   };
 
