@@ -10,6 +10,7 @@ import StudyParametersForm from '@/components/StudyParametersForm';
 import ProtocolArchive from '@/components/ProtocolArchive';
 import DoctorSettings from '@/components/DoctorSettings';
 import { ClinicSettings } from '@/components/ClinicSettings';
+import { NormsManager } from '@/components/NormsManager';
 
 type MainTabsProps = {
   activeTab: string;
@@ -62,7 +63,7 @@ const MainTabs = ({
 }: MainTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-4 mb-8">
+      <TabsList className="grid w-full grid-cols-5 mb-8">
         <TabsTrigger value="settings" className="gap-2">
           <Icon name="Settings" size={18} />
           Настройки
@@ -70,6 +71,10 @@ const MainTabs = ({
         <TabsTrigger value="home" className="gap-2">
           <Icon name="Home" size={18} />
           Главная
+        </TabsTrigger>
+        <TabsTrigger value="norms" className="gap-2">
+          <Icon name="Table" size={18} />
+          Нормы
         </TabsTrigger>
         <TabsTrigger value="calculator" className="gap-2">
           <Icon name="Calculator" size={18} />
@@ -243,6 +248,10 @@ const MainTabs = ({
             </CardContent>
           </Card>
         )}
+      </TabsContent>
+
+      <TabsContent value="norms" className="space-y-6">
+        <NormsManager />
       </TabsContent>
 
       <TabsContent value="settings" className="space-y-6">
