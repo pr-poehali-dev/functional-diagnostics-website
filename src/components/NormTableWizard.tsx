@@ -116,7 +116,7 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
     }
   };
 
-  const availableParameters = studyType.defaultParameters.map(p => p.name);
+  const availableParameters = studyType.parameters?.map(p => p.name) || [];
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
