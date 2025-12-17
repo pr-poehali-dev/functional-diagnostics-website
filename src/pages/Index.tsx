@@ -52,6 +52,7 @@ const Index = () => {
   const { exportToPDF, printProtocol } = useProtocolExporter({
     doctor,
     getParameterStatus,
+    normTables,
   });
 
   const handleOpenFieldOrderSettings = () => {
