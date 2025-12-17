@@ -90,7 +90,18 @@ export const checkParameterNorms = (
   }
 
   const category = getPatientCategory(patientData.gender, patientData.age!);
+  
+  console.log('🔍 Проверка норм:', {
+    parameterName,
+    parameterValue,
+    category,
+    patientAge: patientData.age,
+    studyTypeId,
+    availableTables: normTables.length,
+  });
+  
   if (!category || !patientData.age) {
+    console.log('⚠️ Нет категории или возраста пациента');
     return { status: 'normal' };
   }
 
@@ -102,12 +113,14 @@ export const checkParameterNorms = (
   );
 
   if (!matchingTable) {
+    console.log('⚠️ Таблица норм не найдена для:', { studyTypeId, parameterName, category });
     return { status: 'normal' };
   }
 
   const matchedRow = findMatchingRow(matchingTable, patientData);
   
   if (!matchedRow) {
+    console.log('⚠️ Подходящая строка норм не найдена');
     return { status: 'normal' };
   }
 
@@ -128,6 +141,13 @@ export const checkParameterNorms = (
     status = 'above';
     conclusion = matchingTable.conclusionAbove || undefined;
   }
+
+  console.log('✅ Результат проверки:', {
+    parameterValue,
+    normRange: { min: minNorm, max: maxNorm },
+    status,
+    conclusion,
+  });
 
   return {
     status,
