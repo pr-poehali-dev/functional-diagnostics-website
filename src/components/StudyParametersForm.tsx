@@ -109,7 +109,7 @@ const StudyParametersForm = ({
               )}
             </div>
           );
-        })
+        })}
       </CardContent>
     </Card>
   );
