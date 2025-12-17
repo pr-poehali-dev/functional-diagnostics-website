@@ -23,7 +23,7 @@ export const generateParametersHTML = ({
       if (!param) return '';
 
       const normCheck = protocol.patientData.age && normTables.length > 0
-        ? checkParameterNorms(param.name, value, protocol.patientData, normTables, study.id)
+        ? checkParameterNorms(param.id, value, protocol.patientData, normTables, study.id)
         : null;
 
       const hasCustomNorm = normCheck && normCheck.normRange;
