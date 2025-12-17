@@ -9,6 +9,7 @@ import { FieldOrderSettings } from '@/components/FieldOrderSettings';
 import { SignProtocolDialog } from '@/components/SignProtocolDialog';
 import { useProtocolManager } from '@/hooks/useProtocolManager';
 import { useProtocolExporter } from '@/components/ProtocolExporter';
+import { useNormTables } from '@/hooks/useNormTables';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -16,6 +17,8 @@ const Index = () => {
   const [isFieldOrderOpen, setIsFieldOrderOpen] = useState(false);
   const [isSignDialogOpen, setIsSignDialogOpen] = useState(false);
   const [pendingProtocolId, setPendingProtocolId] = useState<string | null>(null);
+
+  const { normTables } = useNormTables();
 
   const {
     selectedStudy,
@@ -44,7 +47,7 @@ const Index = () => {
     handleGenerateProtocol,
     saveFieldOrder,
     loadFieldOrder,
-  } = useProtocolManager(doctor?.email || null);
+  } = useProtocolManager(doctor?.email || null, normTables);
 
   const { exportToPDF, printProtocol } = useProtocolExporter({
     doctor,
@@ -125,6 +128,7 @@ const Index = () => {
           exportToPDF={exportToPDF}
           printProtocol={printProtocol}
           onOpenFieldOrderSettings={handleOpenFieldOrderSettings}
+          normTables={normTables}
         />
       </main>
 

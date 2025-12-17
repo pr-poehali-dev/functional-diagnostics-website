@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { StudyType, PatientData, PatientAge, Protocol } from '@/types/medical';
 import { useProtocolsAPI } from './useProtocolsAPI';
+import { getAllParameterChecks, generateConclusionFromNorms } from '@/utils/normsChecker';
+import { NormTable } from '@/types/norms';
 
-export const useProtocolManager = (authToken: string | null) => {
+export const useProtocolManager = (authToken: string | null, normTables: NormTable[] = []) => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const [patientData, setPatientData] = useState<PatientData>({
     name: '',
@@ -120,6 +122,28 @@ export const useProtocolManager = (authToken: string | null) => {
 
   const generateConclusion = () => {
     if (!selectedStudy) return '';
+    
+    const numericParams: Record<string, number> = {};
+    selectedStudy.parameters.forEach(param => {
+      const value = parseFloat(parameters[param.id]);
+      if (!isNaN(value)) {
+        numericParams[param.name] = value;
+      }
+    });
+
+    if (patientData.age && normTables.length > 0) {
+      const normChecks = getAllParameterChecks(
+        numericParams,
+        patientData,
+        normTables,
+        selectedStudy.id
+      );
+
+      const normConclusion = generateConclusionFromNorms(normChecks);
+      if (normConclusion) {
+        return normConclusion;
+      }
+    }
     
     const abnormal = selectedStudy.parameters.filter(param => {
       const value = parseFloat(parameters[param.id]);

@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import { StudyType, PatientData, Protocol, studyTypes } from '@/types/medical';
+import { NormTable } from '@/types/norms';
 import PatientDataForm from '@/components/PatientDataForm';
 import StudyParametersForm from '@/components/StudyParametersForm';
 import ProtocolArchive from '@/components/ProtocolArchive';
@@ -35,6 +36,7 @@ type MainTabsProps = {
   exportToPDF: (protocol: Protocol) => void;
   printProtocol: (protocol: Protocol) => void;
   onOpenFieldOrderSettings: () => void;
+  normTables: NormTable[];
 };
 
 const MainTabs = ({
@@ -60,6 +62,7 @@ const MainTabs = ({
   exportToPDF,
   printProtocol,
   onOpenFieldOrderSettings,
+  normTables,
 }: MainTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -212,6 +215,8 @@ const MainTabs = ({
               parameters={parameters}
               onParameterChange={handleParameterChange}
               getParameterStatus={getParameterStatus}
+              patientData={patientData}
+              normTables={normTables}
             />
 
             {Object.keys(parameters).length > 0 && (
