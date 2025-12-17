@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { NormTable, PATIENT_CATEGORIES, NORM_TYPES } from '@/types/norms';
 import {
@@ -30,9 +31,15 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
               <div className="flex-1">
                 <CardTitle className="flex items-center gap-2">
                   <Icon name="Table" size={18} />
-                  {table.name}
+                  {table.parameter}
+                  {table.showInReport && (
+                    <Badge variant="secondary" className="ml-2">
+                      <Icon name="Eye" size={12} className="mr-1" />
+                      В бланке
+                    </Badge>
+                  )}
                 </CardTitle>
-                <CardDescription className="mt-1 space-y-1">
+                <CardDescription className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <Icon name="Users" size={14} />
                     {PATIENT_CATEGORIES[table.category]}
@@ -67,7 +74,7 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
                     <AlertDialogHeader>
                       <AlertDialogTitle>Удалить таблицу норм?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Вы действительно хотите удалить таблицу "{table.name}"? Это действие нельзя отменить.
+                        Вы действительно хотите удалить таблицу "{table.parameter}"? Это действие нельзя отменить.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -82,28 +89,65 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                Параметры ({table.rows.length}):
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {table.rows.slice(0, 6).map((row) => (
-                  <div
-                    key={row.id}
-                    className="text-sm p-2 bg-secondary/30 rounded flex items-center justify-between"
-                  >
-                    <span className="font-medium">{row.parameter}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {row.minValue} - {row.maxValue}
-                    </span>
-                  </div>
-                ))}
-                {table.rows.length > 6 && (
-                  <div className="text-sm p-2 text-muted-foreground flex items-center justify-center">
-                    +{table.rows.length - 6} ещё
-                  </div>
-                )}
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium mb-2">
+                  Таблица норм ({table.rows.length} строк):
+                </p>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-2 font-medium">Диапазон</th>
+                        <th className="text-left p-2 font-medium">Норма {table.parameter}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {table.rows.slice(0, 3).map((row) => (
+                        <tr key={row.id} className="border-t">
+                          <td className="p-2">
+                            {row.rangeFrom} - {row.rangeTo}
+                          </td>
+                          <td className="p-2 text-muted-foreground">
+                            {row.parameterFrom} - {row.parameterTo}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {table.rows.length > 3 && (
+                    <div className="text-center text-sm text-muted-foreground p-2 border-t bg-muted/30">
+                      +{table.rows.length - 3} строк
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {(table.conclusionBelow || table.conclusionAbove) && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Шаблоны заключений:</p>
+                  <div className="grid gap-2">
+                    {table.conclusionBelow && (
+                      <div className="text-sm p-2 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon name="ArrowDown" size={14} className="text-blue-600 dark:text-blue-400" />
+                          <span className="font-medium text-blue-600 dark:text-blue-400">Снижение:</span>
+                        </div>
+                        <p className="text-muted-foreground">{table.conclusionBelow}</p>
+                      </div>
+                    )}
+                    {table.conclusionAbove && (
+                      <div className="text-sm p-2 bg-orange-50 dark:bg-orange-950/20 rounded border border-orange-200 dark:border-orange-800">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon name="ArrowUp" size={14} className="text-orange-600 dark:text-orange-400" />
+                          <span className="font-medium text-orange-600 dark:text-orange-400">Превышение:</span>
+                        </div>
+                        <p className="text-muted-foreground">{table.conclusionAbove}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -6,9 +6,8 @@ import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import { StudyType, studyTypes } from '@/types/medical';
 import { NormTable, PatientCategory, PATIENT_CATEGORIES } from '@/types/norms';
-import { NormTableEditor } from './NormTableEditor';
+import { NormTableWizard } from './NormTableWizard';
 import { NormTableList } from './NormTableList';
-import { ExcelImporter } from './ExcelImporter';
 
 const STORAGE_KEY = 'norms_tables';
 
@@ -18,7 +17,7 @@ export const NormsManager = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<NormTable | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<PatientCategory | 'all'>('all');
-  const [isImporterOpen, setIsImporterOpen] = useState(false);
+
 
   useEffect(() => {
     loadNormTables();
@@ -74,19 +73,7 @@ export const NormsManager = () => {
     toast.success('Таблица норм удалена');
   };
 
-  const handleImportExcel = () => {
-    if (!selectedStudy) {
-      toast.error('Выберите тип исследования');
-      return;
-    }
-    setIsImporterOpen(true);
-  };
 
-  const handleImportComplete = (tables: NormTable[]) => {
-    saveNormTables([...normTables, ...tables]);
-    setIsImporterOpen(false);
-    toast.success(`Импортировано таблиц: ${tables.length}`);
-  };
 
   const filteredTables = selectedStudy
     ? normTables.filter(t => {
@@ -151,16 +138,10 @@ export const NormsManager = () => {
                     {selectedStudy.name} - таблицы норм для разных категорий пациентов
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleImportExcel} variant="outline">
-                    <Icon name="FileUp" size={16} className="mr-2" />
-                    Импорт Excel
-                  </Button>
-                  <Button onClick={handleCreateTable}>
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    Создать таблицу
-                  </Button>
-                </div>
+                <Button onClick={handleCreateTable}>
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Создать таблицу
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -212,7 +193,7 @@ export const NormsManager = () => {
       )}
 
       {isEditorOpen && selectedStudy && (
-        <NormTableEditor
+        <NormTableWizard
           studyType={selectedStudy}
           table={editingTable}
           onSave={handleSaveTable}
@@ -220,14 +201,6 @@ export const NormsManager = () => {
             setIsEditorOpen(false);
             setEditingTable(null);
           }}
-        />
-      )}
-
-      {isImporterOpen && selectedStudy && (
-        <ExcelImporter
-          studyType={selectedStudy}
-          onImport={handleImportComplete}
-          onCancel={() => setIsImporterOpen(false)}
         />
       )}
     </>

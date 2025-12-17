@@ -1,32 +1,27 @@
 export type NormType = 'age' | 'weight' | 'height' | 'bsa';
 
-export type NormRange = {
-  min: number;
-  max: number;
-};
-
-export type NormRow = {
+export type NormTableRow = {
   id: string;
-  parameter: string;
-  minValue: number;
-  maxValue: number;
-  rangeType?: NormType;
-  rangeMin?: number;
-  rangeMax?: number;
+  rangeFrom: string;
+  rangeTo: string;
+  parameterFrom: string;
+  parameterTo: string;
 };
 
 export type PatientCategory = 'adult_male' | 'adult_female' | 'child_male' | 'child_female';
 
 export type NormTable = {
   id: string;
-  name: string;
   studyType: string;
   category: PatientCategory;
+  parameter: string;
   normType: NormType;
-  rows: NormRow[];
+  rows: NormTableRow[];
+  showInReport: boolean;
+  conclusionBelow: string;
+  conclusionAbove: string;
   createdAt: string;
   updatedAt: string;
-  source?: 'manual' | 'excel';
 };
 
 export const PATIENT_CATEGORIES: Record<PatientCategory, string> = {
