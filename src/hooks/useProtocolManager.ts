@@ -127,7 +127,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     selectedStudy.parameters.forEach(param => {
       const value = parseFloat(parameters[param.id]);
       if (!isNaN(value)) {
-        numericParams[param.name] = value;
+        numericParams[param.id] = value;
       }
     });
 

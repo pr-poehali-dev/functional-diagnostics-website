@@ -38,7 +38,7 @@ const StudyParametersForm = ({
           const value = parseFloat(parameters[param.id]);
           
           const normCheck = patientData.age 
-            ? checkParameterNorms(param.name, value, patientData, normTables, selectedStudy.id)
+            ? checkParameterNorms(param.id, value, patientData, normTables, selectedStudy.id)
             : null;
           
           const hasCustomNorm = normCheck && normCheck.normRange;
