@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
-import { NormTable, PATIENT_CATEGORIES, NORM_TYPES } from '@/types/norms';
+import { NormTable, PATIENT_CATEGORIES, NORM_TYPES, AGE_UNITS } from '@/types/norms';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,6 +107,11 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
                         <tr key={row.id} className="border-t">
                           <td className="p-2">
                             {row.rangeFrom} - {row.rangeTo}
+                            {table.normType === 'age' && row.rangeUnit && (
+                              <span className="text-muted-foreground ml-1">
+                                {AGE_UNITS[row.rangeUnit]}
+                              </span>
+                            )}
                           </td>
                           <td className="p-2 text-muted-foreground">
                             {row.parameterFrom} - {row.parameterTo}

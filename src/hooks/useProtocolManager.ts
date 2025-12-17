@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { StudyType, PatientData, Protocol } from '@/types/medical';
+import { StudyType, PatientData, PatientAge, Protocol } from '@/types/medical';
 import { useProtocolsAPI } from './useProtocolsAPI';
 
 export const useProtocolManager = (authToken: string | null) => {
@@ -29,48 +29,30 @@ export const useProtocolManager = (authToken: string | null) => {
     importProtocols,
   } = useProtocolsAPI(authToken);
 
-  const calculateAge = (birthDate: string): string => {
-    if (!birthDate) return '';
-    
-    const today = new Date();
+  const calculateAgeFromDate = (birthDate: string, referenceDate: string = new Date().toISOString()): PatientAge => {
+    if (!birthDate) {
+      return { years: 0, months: 0, days: 0 };
+    }
+
     const birth = new Date(birthDate);
-    
-    let years = today.getFullYear() - birth.getFullYear();
-    let months = today.getMonth() - birth.getMonth();
-    let days = today.getDate() - birth.getDate();
-    
+    const reference = new Date(referenceDate);
+
+    let years = reference.getFullYear() - birth.getFullYear();
+    let months = reference.getMonth() - birth.getMonth();
+    let days = reference.getDate() - birth.getDate();
+
     if (days < 0) {
       months--;
-      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      days += prevMonth.getDate();
+      const lastMonth = new Date(reference.getFullYear(), reference.getMonth(), 0);
+      days += lastMonth.getDate();
     }
-    
+
     if (months < 0) {
       years--;
       months += 12;
     }
-    
-    const totalDays = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (totalDays < 31) {
-      return `${totalDays} ${totalDays === 1 ? 'день' : totalDays < 5 ? 'дня' : 'дней'}`;
-    }
-    
-    if (years < 1) {
-      if (days === 0) {
-        return `${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}`;
-      }
-      return `${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'} ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`;
-    }
-    
-    if (years < 10) {
-      if (months === 0) {
-        return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`;
-      }
-      return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'} ${months} ${months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}`;
-    }
-    
-    return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`;
+
+    return { years, months, days };
   };
 
   const calculateBSA = (weight: number, height: number): number => {
@@ -81,8 +63,12 @@ export const useProtocolManager = (authToken: string | null) => {
   const handlePatientDataChange = (field: keyof PatientData, value: string) => {
     const newData = { ...patientData, [field]: value };
     
-    if (field === 'birthDate') {
-      newData.age = calculateAge(value);
+    if (field === 'birthDate' || field === 'studyDate') {
+      if (newData.birthDate && newData.studyDate) {
+        newData.age = calculateAgeFromDate(newData.birthDate, newData.studyDate);
+      } else if (newData.birthDate) {
+        newData.age = calculateAgeFromDate(newData.birthDate);
+      }
     }
     
     if (field === 'weight' || field === 'height') {

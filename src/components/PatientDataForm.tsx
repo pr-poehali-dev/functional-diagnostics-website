@@ -63,7 +63,7 @@ const PatientDataForm = ({ patientData, onPatientDataChange }: PatientDataFormPr
             <div className="space-y-2">
               <Label>Возраст</Label>
               <Input
-                value={patientData.age}
+                value={`${patientData.age.years} лет ${patientData.age.months} мес ${patientData.age.days} дн`}
                 disabled
                 className="bg-secondary"
               />

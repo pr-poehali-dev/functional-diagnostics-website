@@ -13,11 +13,17 @@ export type Parameter = {
   normalRange: { min: number; max: number };
 };
 
+export type PatientAge = {
+  years: number;
+  months: number;
+  days: number;
+};
+
 export type PatientData = {
   name: string;
   gender: 'male' | 'female' | '';
   birthDate: string;
-  age?: string;
+  age?: PatientAge;
   weight: string;
   height: string;
   bsa?: number;

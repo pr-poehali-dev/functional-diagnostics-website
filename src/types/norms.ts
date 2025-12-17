@@ -1,9 +1,12 @@
 export type NormType = 'age' | 'weight' | 'height' | 'bsa';
 
+export type AgeUnit = 'years' | 'months' | 'days';
+
 export type NormTableRow = {
   id: string;
   rangeFrom: string;
   rangeTo: string;
+  rangeUnit?: AgeUnit;
   parameterFrom: string;
   parameterTo: string;
 };
@@ -32,8 +35,14 @@ export const PATIENT_CATEGORIES: Record<PatientCategory, string> = {
 };
 
 export const NORM_TYPES: Record<NormType, string> = {
-  age: 'По возрасту (лет)',
+  age: 'По возрасту',
   weight: 'По массе тела (кг)',
   height: 'По росту (см)',
   bsa: 'По площади поверхности тела (м²)',
+};
+
+export const AGE_UNITS: Record<AgeUnit, string> = {
+  years: 'лет',
+  months: 'месяцев',
+  days: 'дней',
 };

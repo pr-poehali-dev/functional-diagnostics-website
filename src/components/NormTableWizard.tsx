@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { StudyType } from '@/types/medical';
-import { NormTable, NormTableRow, PatientCategory, NormType, PATIENT_CATEGORIES, NORM_TYPES } from '@/types/norms';
+import { NormTable, NormTableRow, PatientCategory, NormType, AgeUnit, PATIENT_CATEGORIES, NORM_TYPES, AGE_UNITS } from '@/types/norms';
 
 interface NormTableWizardProps {
   studyType: StudyType;
@@ -47,13 +47,14 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
       id: crypto.randomUUID(),
       rangeFrom: '',
       rangeTo: '',
+      rangeUnit: normType === 'age' ? 'years' : undefined,
       parameterFrom: '',
       parameterTo: '',
     };
     setRows([...rows, newRow]);
   };
 
-  const updateRow = (id: string, field: keyof NormTableRow, value: string) => {
+  const updateRow = (id: string, field: keyof NormTableRow, value: string | AgeUnit) => {
     setRows(rows.map(row => row.id === id ? { ...row, [field]: value } : row));
   };
 
@@ -104,7 +105,7 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
   const getRangeLabels = () => {
     switch (normType) {
       case 'age':
-        return { from: 'Возраст от (лет)', to: 'Возраст до (лет)' };
+        return { from: 'Возраст от', to: 'Возраст до' };
       case 'weight':
         return { from: 'Масса от (кг)', to: 'Масса до (кг)' };
       case 'height':
@@ -239,6 +240,11 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
                           <th className="text-left p-2 text-sm font-medium">
                             {getRangeLabels().to}
                           </th>
+                          {normType === 'age' && (
+                            <th className="text-left p-2 text-sm font-medium w-32">
+                              Единица
+                            </th>
+                          )}
                           <th className="text-left p-2 text-sm font-medium">
                             {parameter} от
                           </th>
@@ -256,6 +262,7 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
                                 value={row.rangeFrom}
                                 onChange={(e) => updateRow(row.id, 'rangeFrom', e.target.value)}
                                 placeholder="0"
+                                type="number"
                               />
                             </td>
                             <td className="p-2">
@@ -263,13 +270,35 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
                                 value={row.rangeTo}
                                 onChange={(e) => updateRow(row.id, 'rangeTo', e.target.value)}
                                 placeholder="100"
+                                type="number"
                               />
                             </td>
+                            {normType === 'age' && (
+                              <td className="p-2">
+                                <Select
+                                  value={row.rangeUnit || 'years'}
+                                  onValueChange={(value) => updateRow(row.id, 'rangeUnit', value as AgeUnit)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(AGE_UNITS).map(([key, label]) => (
+                                      <SelectItem key={key} value={key}>
+                                        {label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </td>
+                            )}
                             <td className="p-2">
                               <Input
                                 value={row.parameterFrom}
                                 onChange={(e) => updateRow(row.id, 'parameterFrom', e.target.value)}
                                 placeholder="0"
+                                type="number"
+                                step="0.01"
                               />
                             </td>
                             <td className="p-2">
@@ -277,6 +306,8 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
                                 value={row.parameterTo}
                                 onChange={(e) => updateRow(row.id, 'parameterTo', e.target.value)}
                                 placeholder="100"
+                                type="number"
+                                step="0.01"
                               />
                             </td>
                             <td className="p-2">
