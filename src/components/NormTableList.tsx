@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { NormTable, PATIENT_CATEGORIES, NORM_TYPES, AGE_UNITS } from '@/types/norms';
+import { studyTypes } from '@/types/medical';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,16 +23,22 @@ type NormTableListProps = {
 };
 
 export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) => {
+  const getParameterName = (studyTypeId: string, parameterId: string): string => {
+    const study = studyTypes.find(s => s.id === studyTypeId);
+    const param = study?.parameters.find(p => p.id === parameterId);
+    return param?.name || parameterId;
+  };
+
   return (
     <div className="space-y-4">
-      {tables.map((table) => (
+      {tables.map((table) => {
         <Card key={table.id}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <CardTitle className="flex items-center gap-2">
                   <Icon name="Table" size={18} />
-                  {table.parameter}
+                  {getParameterName(table.studyType, table.parameter)}
                   {table.showInReport && (
                     <Badge variant="secondary" className="ml-2">
                       <Icon name="Eye" size={12} className="mr-1" />

@@ -117,7 +117,7 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
     }
   };
 
-  const availableParameters = studyType.parameters?.map(p => p.name) || [];
+  const availableParameters = studyType.parameters || [];
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -185,8 +185,8 @@ export const NormTableWizard = ({ studyType, table, onSave, onCancel }: NormTabl
                   </SelectTrigger>
                   <SelectContent>
                     {availableParameters.map((param) => (
-                      <SelectItem key={param} value={param}>
-                        {param}
+                      <SelectItem key={param.id} value={param.id}>
+                        {param.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
