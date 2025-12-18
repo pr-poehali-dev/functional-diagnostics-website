@@ -45,22 +45,33 @@ export const ageInUnit = (age: PatientAge, unit: 'years' | 'months' | 'days'): n
   }
 };
 
+/**
+ * Форматирует возраст пациента в зависимости от возрастного диапазона:
+ * - До 1 месяца (0-30 дней): только дни (например, "15 дней")
+ * - От 1 месяца до 1 года: месяцы и дни (например, "5 месяцев 10 дней")
+ * - От 1 года: годы и месяцы (например, "3 года 6 месяцев")
+ */
 export const formatAge = (age: PatientAge): string => {
-  const parts: string[] = [];
-  
-  if (age.years > 0) {
-    parts.push(`${age.years} ${getYearWord(age.years)}`);
+  const { years, months, days } = age;
+
+  // Первый месяц жизни (0 лет, 0 месяцев) - только дни
+  if (years === 0 && months === 0) {
+    return `${days} ${getDayWord(days)}`;
   }
-  
-  if (age.months > 0) {
-    parts.push(`${age.months} ${getMonthWord(age.months)}`);
+
+  // До года (0 лет, есть месяцы) - месяцы и дни
+  if (years === 0 && months > 0) {
+    if (days === 0) {
+      return `${months} ${getMonthWord(months)}`;
+    }
+    return `${months} ${getMonthWord(months)} ${days} ${getDayWord(days)}`;
   }
-  
-  if (age.days > 0 || parts.length === 0) {
-    parts.push(`${age.days} ${getDayWord(age.days)}`);
+
+  // От года - годы и месяцы
+  if (months === 0) {
+    return `${years} ${getYearWord(years)}`;
   }
-  
-  return parts.join(' ');
+  return `${years} ${getYearWord(years)} ${months} ${getMonthWord(months)}`;
 };
 
 const getYearWord = (count: number): string => {

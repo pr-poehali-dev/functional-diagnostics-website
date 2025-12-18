@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { Protocol, studyTypes } from '@/types/medical';
+import { formatAge } from './ageCalculator';
 
 export const exportProtocolsToExcel = (protocols: Protocol[], filename: string = 'protocols.xlsx') => {
   const worksheetData: any[] = [];
@@ -36,7 +37,7 @@ export const exportProtocolsToExcel = (protocols: Protocol[], filename: string =
       protocol.patientName,
       protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский',
       protocol.patientData.birthDate,
-      protocol.patientData.age,
+      protocol.patientData.age ? formatAge(protocol.patientData.age) : '',
       protocol.patientData.weight || '',
       protocol.patientData.height || '',
       protocol.patientData.bsa?.toFixed(2) || '',
@@ -90,7 +91,9 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
   worksheetData.push(['ФИО', protocol.patientName]);
   worksheetData.push(['Пол', protocol.patientData.gender === 'male' ? 'Мужской' : 'Женский']);
   worksheetData.push(['Дата рождения', protocol.patientData.birthDate]);
-  worksheetData.push(['Возраст', `${protocol.patientData.age} лет`]);
+  if (protocol.patientData.age) {
+    worksheetData.push(['Возраст', formatAge(protocol.patientData.age)]);
+  }
   if (protocol.patientData.weight && protocol.patientData.height) {
     worksheetData.push(['Масса', `${protocol.patientData.weight} кг`]);
     worksheetData.push(['Рост', `${protocol.patientData.height} см`]);

@@ -19,6 +19,7 @@ import Icon from '@/components/ui/icon';
 import { Protocol, studyTypes } from '@/types/medical';
 import { NormTable } from '@/types/norms';
 import { checkParameterNorms } from '@/utils/normsChecker';
+import { formatAge } from '@/utils/ageCalculator';
 import ProtocolEditModal from './ProtocolEditModal';
 import ProtocolImportModal from './ProtocolImportModal';
 import { exportProtocolsToExcel, exportSingleProtocolToExcel } from '@/utils/excelExport';
@@ -267,7 +268,7 @@ const ProtocolArchive = ({
                           <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
                           <div className="text-xs">
                             {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}
-                            {protocol.patientData.age && <>, {protocol.patientData.age.years} лет {protocol.patientData.age.months} мес</>}
+                            {protocol.patientData.age && <>, {formatAge(protocol.patientData.age)}</>}
                             {protocol.patientData.weight && protocol.patientData.height && (
                               <> • {protocol.patientData.weight}кг, {protocol.patientData.height}см</>
                             )}

@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 import { PatientData } from '@/types/medical';
+import { formatAge } from '@/utils/ageCalculator';
 
 type PatientDataFormProps = {
   patientData: PatientData;
@@ -63,7 +64,7 @@ const PatientDataForm = ({ patientData, onPatientDataChange }: PatientDataFormPr
             <div className="space-y-2">
               <Label>Возраст</Label>
               <Input
-                value={`${patientData.age.years} лет ${patientData.age.months} мес ${patientData.age.days} дн`}
+                value={formatAge(patientData.age)}
                 disabled
                 className={patientData.age.years < 0 ? 'bg-red-100 border-red-500' : 'bg-secondary'}
               />

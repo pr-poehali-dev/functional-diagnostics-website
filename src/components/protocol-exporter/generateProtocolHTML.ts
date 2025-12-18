@@ -1,5 +1,6 @@
 import { Protocol } from '@/types/medical';
 import { getProtocolStyles } from './getProtocolStyles';
+import { formatAge } from '@/utils/ageCalculator';
 
 type Doctor = {
   id: number;
@@ -82,7 +83,7 @@ export const generateProtocolHTML = ({
           </div>
           <div class="info-row">
             <span class="info-label">Дата рождения:</span>
-            <span>${protocol.patientData.birthDate}${protocol.patientData.age ? ` (возраст: ${protocol.patientData.age.years} лет ${protocol.patientData.age.months} мес)` : ''}</span>
+            <span>${protocol.patientData.birthDate}${protocol.patientData.age ? ` (возраст: ${formatAge(protocol.patientData.age)})` : ''}</span>
           </div>
           ${protocol.patientData.weight ? `
           <div class="info-row">
