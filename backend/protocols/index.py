@@ -169,6 +169,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'isBase64Encoded': False
                     }
             
+            patient_age = body_data.get('patient_age')
+            if patient_age and isinstance(patient_age, dict):
+                patient_age = json.dumps(patient_age)
+            
             cur.execute("""
                 INSERT INTO t_p13795046_functional_diagnosti.protocols 
                 (doctor_id, study_type, patient_name, patient_gender, patient_birth_date, 
@@ -182,7 +186,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data['patient_name'],
                 body_data['patient_gender'],
                 body_data['patient_birth_date'],
-                body_data.get('patient_age'),
+                patient_age,
                 body_data.get('patient_weight'),
                 body_data.get('patient_height'),
                 body_data.get('patient_bsa'),
