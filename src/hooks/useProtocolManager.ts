@@ -148,7 +148,12 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
         selectedStudy.id
       );
 
-      const normConclusion = generateConclusionFromNorms(normChecks);
+      const parameterNames: Record<string, string> = {};
+      selectedStudy.parameters.forEach(param => {
+        parameterNames[param.id] = param.name;
+      });
+
+      const normConclusion = generateConclusionFromNorms(normChecks, numericParams, parameterNames);
       if (normConclusion) {
         return normConclusion;
       }

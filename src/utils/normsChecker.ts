@@ -195,9 +195,12 @@ export const getAllParameterChecks = (
 };
 
 export const generateConclusionFromNorms = (
-  checks: Record<string, NormCheckResult>
+  checks: Record<string, NormCheckResult>,
+  parameters?: Record<string, number>,
+  parameterNames?: Record<string, string>
 ): string => {
   const conclusions: string[] = [];
+  const abnormalConclusions: string[] = [];
   let hasAnyChecks = false;
   let allNormal = true;
 
@@ -206,7 +209,7 @@ export const generateConclusionFromNorms = (
     if (result.status !== 'normal') {
       allNormal = false;
       if (result.conclusion) {
-        conclusions.push(result.conclusion);
+        abnormalConclusions.push(result.conclusion);
       }
     }
   });
@@ -215,8 +218,34 @@ export const generateConclusionFromNorms = (
     return '';
   }
 
-  if (allNormal && conclusions.length === 0) {
+  if (allNormal && abnormalConclusions.length === 0) {
     return 'Все показатели в пределах возрастной нормы. Патологии не выявлено.';
+  }
+
+  if (parameters && parameterNames) {
+    Object.entries(checks).forEach(([paramName, result]) => {
+      const value = parameters[paramName];
+      const name = parameterNames[paramName] || paramName;
+      
+      if (value !== undefined && !isNaN(value)) {
+        const formattedValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        const range = result.normRange;
+        
+        if (range) {
+          const minStr = Number.isInteger(range.min) ? range.min.toString() : range.min.toFixed(1);
+          const maxStr = Number.isInteger(range.max) ? range.max.toString() : range.max.toFixed(1);
+          conclusions.push(`${name}: ${formattedValue} (норма ${minStr}-${maxStr})`);
+        } else {
+          conclusions.push(`${name}: ${formattedValue}`);
+        }
+      }
+    });
+  }
+
+  if (abnormalConclusions.length > 0) {
+    conclusions.push('');
+    conclusions.push('Заключение:');
+    conclusions.push(...abnormalConclusions);
   }
 
   return conclusions.length > 0 ? conclusions.join('\n') : '';
