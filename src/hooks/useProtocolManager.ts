@@ -76,6 +76,14 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     
     if (field === 'birthDate' || field === 'studyDate') {
       if (newData.birthDate && newData.studyDate) {
+        const birthDate = new Date(newData.birthDate);
+        const studyDate = new Date(newData.studyDate);
+        
+        if (birthDate > studyDate) {
+          toast.error('Дата рождения не может быть позже даты исследования');
+          return;
+        }
+        
         newData.age = calculateAgeFromDate(newData.birthDate, newData.studyDate);
       } else if (newData.birthDate) {
         newData.age = calculateAgeFromDate(newData.birthDate);

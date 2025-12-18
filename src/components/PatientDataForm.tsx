@@ -65,8 +65,13 @@ const PatientDataForm = ({ patientData, onPatientDataChange }: PatientDataFormPr
               <Input
                 value={`${patientData.age.years} лет ${patientData.age.months} мес ${patientData.age.days} дн`}
                 disabled
-                className="bg-secondary"
+                className={patientData.age.years < 0 ? 'bg-red-100 border-red-500' : 'bg-secondary'}
               />
+              {patientData.age.years < 0 && (
+                <p className="text-xs text-red-600">
+                  ⚠️ Ошибка: дата рождения позже даты исследования
+                </p>
+              )}
             </div>
           )}
           
