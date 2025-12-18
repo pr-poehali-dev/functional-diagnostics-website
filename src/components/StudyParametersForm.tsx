@@ -106,15 +106,15 @@ const StudyParametersForm = ({
                   >
                     {status === 'success' 
                       ? 'Норма' 
-                      : status === 'warning' 
-                        ? (normCheck?.status === 'borderline_low' || normCheck?.status === 'borderline_high'
-                            ? 'Пограничное'
-                            : normCheck?.status === 'below'
-                            ? 'Снижено'
-                            : 'Повышено')
+                      : normCheck?.status === 'borderline_low' || normCheck?.status === 'borderline_high'
+                        ? 'Пограничное'
+                        : normCheck?.status === 'below'
+                        ? 'Снижено'
                         : normCheck?.status === 'above'
                         ? 'Повышено'
-                        : 'Снижено'}
+                        : status === 'warning'
+                        ? 'Снижено'
+                        : 'Повышено'}
                   </Badge>
                 )}
               </div>
