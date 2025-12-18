@@ -12,13 +12,18 @@ export const useNormTables = () => {
 
   const loadNormTables = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    let existingTables: NormTable[] = [];
+    
     if (stored) {
       try {
-        setNormTables(JSON.parse(stored));
+        existingTables = JSON.parse(stored);
+        setNormTables(existingTables);
       } catch (e) {
         console.error('Failed to load norms tables:', e);
       }
-    } else {
+    }
+    
+    if (!stored || existingTables.length === 0) {
       const seedTables: NormTable[] = [
         {
           id: crypto.randomUUID(),
