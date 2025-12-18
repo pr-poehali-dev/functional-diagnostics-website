@@ -106,21 +106,31 @@ export const checkParameterNorms = (
     return { status: 'normal' };
   }
 
-  const matchingTable = normTables.find(
+  const candidateTables = normTables.filter(
     (table) =>
       table.studyType === studyTypeId &&
       table.parameter === parameterName &&
       table.category === category
   );
 
-  if (!matchingTable) {
+  if (candidateTables.length === 0) {
     console.log('⚠️ Таблица норм не найдена для:', { studyTypeId, parameterName, category });
     return { status: 'normal' };
   }
 
-  const matchedRow = findMatchingRow(matchingTable, patientData);
+  let matchedRow: NormTableRow | null = null;
+  let matchingTable: NormTable | null = null;
+
+  for (const table of candidateTables) {
+    const row = findMatchingRow(table, patientData);
+    if (row) {
+      matchedRow = row;
+      matchingTable = table;
+      break;
+    }
+  }
   
-  if (!matchedRow) {
+  if (!matchedRow || !matchingTable) {
     console.log('⚠️ Подходящая строка норм не найдена');
     return { status: 'normal' };
   }
