@@ -260,7 +260,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if 'patient_age' in body_data:
                 update_fields.append("patient_age = %s")
-                params.append(body_data['patient_age'])
+                patient_age_update = body_data['patient_age']
+                if patient_age_update and isinstance(patient_age_update, dict):
+                    patient_age_update = json.dumps(patient_age_update)
+                params.append(patient_age_update)
             
             if 'patient_weight' in body_data:
                 update_fields.append("patient_weight = %s")
@@ -385,6 +388,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def format_protocol_row(row: tuple) -> Dict[str, Any]:
     '''Форматирует строку из БД в словарь протокола'''
+    patient_age = row[6]
+    if patient_age:
+        try:
+            patient_age = json.loads(patient_age)
+        except (json.JSONDecodeError, TypeError):
+            pass
+    
     return {
         'id': row[0],
         'doctor_id': row[1],
@@ -392,7 +402,7 @@ def format_protocol_row(row: tuple) -> Dict[str, Any]:
         'patient_name': row[3],
         'patient_gender': row[4],
         'patient_birth_date': row[5].isoformat() if row[5] else None,
-        'patient_age': row[6],
+        'patient_age': patient_age,
         'patient_weight': float(row[7]) if row[7] else None,
         'patient_height': float(row[8]) if row[8] else None,
         'patient_bsa': float(row[9]) if row[9] else None,
