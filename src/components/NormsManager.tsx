@@ -63,6 +63,12 @@ export const NormsManager = () => {
     toast.success('Таблица норм удалена');
   };
 
+  const handleResetToDefaults = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    reloadNormTables();
+    toast.success('Таблицы норм сброшены до начальных значений');
+  };
+
 
 
   const filteredTables = selectedStudy
@@ -83,12 +89,24 @@ export const NormsManager = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Выбор исследования</CardTitle>
-          <CardDescription>
-            Выберите тип исследования для управления нормативными таблицами
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Выбор исследования</CardTitle>
+              <CardDescription>
+                Выберите тип исследования для управления нормативными таблицами
+              </CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleResetToDefaults}
+            >
+              <Icon name="RotateCcw" size={16} className="mr-2" />
+              Сбросить к начальным
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Select
             value={selectedStudy?.id}
             onValueChange={(value) => {
@@ -111,6 +129,15 @@ export const NormsManager = () => {
               ))}
             </SelectContent>
           </Select>
+
+          <div className="text-sm text-muted-foreground">
+            <p>Всего таблиц норм: <strong>{normTables.length}</strong></p>
+            {selectedStudy && (
+              <p className="mt-1">
+                Для {selectedStudy.name}: <strong>{filteredTables.length}</strong>
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
