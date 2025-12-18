@@ -38,6 +38,15 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
 
     const birth = new Date(birthDate);
     const reference = new Date(referenceDate);
+    
+    console.log('📅 Расчёт возраста:', {
+      birthDate,
+      referenceDate,
+      birthParsed: birth,
+      referenceParsed: reference,
+      birthYear: birth.getFullYear(),
+      refYear: reference.getFullYear()
+    });
 
     let years = reference.getFullYear() - birth.getFullYear();
     let months = reference.getMonth() - birth.getMonth();
