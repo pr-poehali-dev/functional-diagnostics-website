@@ -54,36 +54,12 @@ const StudyParametersForm = ({
 
           return (
             <div key={param.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={param.id}>{param.name}</Label>
-                <div className="flex items-center gap-2">
-                  {hasCustomNorm && (
-                    <Badge variant="outline" className="text-xs">
-                      <Icon name="Table" size={12} className="mr-1" />
-                      По таблице
-                    </Badge>
-                  )}
-                  {status && (
-                    <Badge
-                      variant={status === 'success' ? 'default' : 'destructive'}
-                      className={
-                        status === 'success'
-                          ? 'bg-green-500'
-                          : status === 'warning'
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                      }
-                    >
-                      {status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено'}
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              <Label htmlFor={param.id}>{param.name}</Label>
               <div className="flex gap-2 items-center">
                 <Input
                   id={param.id}
                   type="number"
-                  placeholder={`${displayRange!.min} - ${displayRange!.max}`}
+                  placeholder="Значение"
                   value={parameters[param.id] || ''}
                   onChange={(e) => onParameterChange(param.id, e.target.value)}
                   className={
@@ -97,11 +73,35 @@ const StudyParametersForm = ({
                   }
                 />
                 <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
+                <Input
+                  type="number"
+                  placeholder="Мин"
+                  value={displayRange?.min?.toFixed(1) || ''}
+                  readOnly
+                  className="w-20 bg-muted text-center text-sm"
+                />
+                <Input
+                  type="number"
+                  placeholder="Макс"
+                  value={displayRange?.max?.toFixed(1) || ''}
+                  readOnly
+                  className="w-20 bg-muted text-center text-sm"
+                />
+                {status && (
+                  <Badge
+                    variant={status === 'success' ? 'default' : 'destructive'}
+                    className={
+                      status === 'success'
+                        ? 'bg-green-500'
+                        : status === 'warning'
+                        ? 'bg-yellow-500'
+                        : 'bg-red-500'
+                    }
+                  >
+                    {status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено'}
+                  </Badge>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Норма: {displayRange!.min.toFixed(1)} - {displayRange!.max.toFixed(1)} {param.unit}
-                {hasCustomNorm && <span className="ml-2 text-blue-600">(из таблицы норм)</span>}
-              </p>
               {normCheck?.conclusion && status !== 'success' && (
                 <p className="text-xs p-2 rounded bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300">
                   {normCheck.conclusion}
