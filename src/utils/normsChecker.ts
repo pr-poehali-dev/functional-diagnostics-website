@@ -198,12 +198,26 @@ export const generateConclusionFromNorms = (
   checks: Record<string, NormCheckResult>
 ): string => {
   const conclusions: string[] = [];
+  let hasAnyChecks = false;
+  let allNormal = true;
 
   Object.entries(checks).forEach(([paramName, result]) => {
-    if (result.status !== 'normal' && result.conclusion) {
-      conclusions.push(result.conclusion);
+    hasAnyChecks = true;
+    if (result.status !== 'normal') {
+      allNormal = false;
+      if (result.conclusion) {
+        conclusions.push(result.conclusion);
+      }
     }
   });
 
-  return conclusions.join('\n');
+  if (!hasAnyChecks) {
+    return '';
+  }
+
+  if (allNormal && conclusions.length === 0) {
+    return 'Все показатели в пределах возрастной нормы. Патологии не выявлено.';
+  }
+
+  return conclusions.length > 0 ? conclusions.join('\n') : '';
 };

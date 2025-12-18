@@ -124,8 +124,8 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   };
 
   const getParameterStatus = (value: number, range: { min: number; max: number }) => {
-    if (value < range.min || value > range.max) return 'danger';
-    if (value < range.min * 1.1 || value > range.max * 0.9) return 'warning';
+    if (value < range.min) return 'warning';
+    if (value > range.max) return 'danger';
     return 'success';
   };
 
@@ -154,6 +154,11 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
       }
     }
     
+    const hasAnyData = Object.keys(numericParams).length > 0;
+    if (!hasAnyData) {
+      return '';
+    }
+
     const abnormal = selectedStudy.parameters.filter(param => {
       const value = parseFloat(parameters[param.id]);
       if (isNaN(value)) return false;
