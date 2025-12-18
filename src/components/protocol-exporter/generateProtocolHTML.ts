@@ -82,7 +82,7 @@ export const generateProtocolHTML = ({
           </div>
           <div class="info-row">
             <span class="info-label">Дата рождения:</span>
-            <span>${protocol.patientData.birthDate}${protocol.patientData.age ? ` (возраст: ${protocol.patientData.age})` : ''}</span>
+            <span>${protocol.patientData.birthDate}${protocol.patientData.age ? ` (возраст: ${protocol.patientData.age.years} лет ${protocol.patientData.age.months} мес)` : ''}</span>
           </div>
           ${protocol.patientData.weight ? `
           <div class="info-row">
