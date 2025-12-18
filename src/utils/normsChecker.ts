@@ -41,34 +41,34 @@ const findMatchingRow = (
 ): NormTableRow | null => {
   if (!patientData.age) return null;
 
-  let compareValue: number;
-
-  switch (table.normType) {
-    case 'age':
-      if (!table.rows[0]?.rangeUnit) return null;
-      compareValue = ageToValue(patientData.age, table.rows[0].rangeUnit);
-      break;
-    case 'weight':
-      compareValue = parseFloat(patientData.weight);
-      if (isNaN(compareValue)) return null;
-      break;
-    case 'height':
-      compareValue = parseFloat(patientData.height);
-      if (isNaN(compareValue)) return null;
-      break;
-    case 'bsa':
-      compareValue = patientData.bsa || 0;
-      if (compareValue === 0) return null;
-      break;
-    default:
-      return null;
-  }
-
   for (const row of table.rows) {
     const rangeFrom = parseFloat(row.rangeFrom);
     const rangeTo = parseFloat(row.rangeTo);
     
     if (isNaN(rangeFrom) || isNaN(rangeTo)) continue;
+    
+    let compareValue: number;
+
+    switch (table.normType) {
+      case 'age':
+        if (!row.rangeUnit) continue;
+        compareValue = ageToValue(patientData.age, row.rangeUnit);
+        break;
+      case 'weight':
+        compareValue = parseFloat(patientData.weight);
+        if (isNaN(compareValue)) continue;
+        break;
+      case 'height':
+        compareValue = parseFloat(patientData.height);
+        if (isNaN(compareValue)) continue;
+        break;
+      case 'bsa':
+        compareValue = patientData.bsa || 0;
+        if (compareValue === 0) continue;
+        break;
+      default:
+        continue;
+    }
     
     if (compareValue >= rangeFrom && compareValue <= rangeTo) {
       return row;
