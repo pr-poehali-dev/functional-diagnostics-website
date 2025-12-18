@@ -9,6 +9,8 @@ export type NormTableRow = {
   rangeUnit?: AgeUnit;
   parameterFrom: string;
   parameterTo: string;
+  borderlineLow?: string;
+  borderlineHigh?: string;
 };
 
 export type PatientCategory = 'adult_male' | 'adult_female' | 'child_male' | 'child_female';
@@ -23,6 +25,8 @@ export type NormTable = {
   showInReport: boolean;
   conclusionBelow: string;
   conclusionAbove: string;
+  conclusionBorderlineLow?: string;
+  conclusionBorderlineHigh?: string;
   createdAt: string;
   updatedAt: string;
 };

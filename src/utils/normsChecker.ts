@@ -2,8 +2,9 @@ import { NormTable, NormTableRow, PatientCategory, AgeUnit } from '@/types/norms
 import { PatientData, PatientAge } from '@/types/medical';
 
 export type NormCheckResult = {
-  status: 'normal' | 'below' | 'above';
+  status: 'normal' | 'below' | 'above' | 'borderline_low' | 'borderline_high';
   normRange?: { min: number; max: number };
+  borderlineRange?: { low?: number; high?: number };
   conclusion?: string;
   matchedRow?: NormTableRow;
 };
@@ -131,20 +132,34 @@ export const checkParameterNorms = (
     return { status: 'normal' };
   }
 
-  let status: 'normal' | 'below' | 'above' = 'normal';
+  const borderlineLow = matchedRow.borderlineLow ? parseFloat(matchedRow.borderlineLow) : undefined;
+  const borderlineHigh = matchedRow.borderlineHigh ? parseFloat(matchedRow.borderlineHigh) : undefined;
+
+  let status: 'normal' | 'below' | 'above' | 'borderline_low' | 'borderline_high' = 'normal';
   let conclusion: string | undefined;
 
   if (parameterValue < minNorm) {
-    status = 'below';
-    conclusion = matchingTable.conclusionBelow || undefined;
+    if (borderlineLow !== undefined && parameterValue >= borderlineLow) {
+      status = 'borderline_low';
+      conclusion = matchingTable.conclusionBorderlineLow || matchingTable.conclusionBelow || undefined;
+    } else {
+      status = 'below';
+      conclusion = matchingTable.conclusionBelow || undefined;
+    }
   } else if (parameterValue > maxNorm) {
-    status = 'above';
-    conclusion = matchingTable.conclusionAbove || undefined;
+    if (borderlineHigh !== undefined && parameterValue <= borderlineHigh) {
+      status = 'borderline_high';
+      conclusion = matchingTable.conclusionBorderlineHigh || matchingTable.conclusionAbove || undefined;
+    } else {
+      status = 'above';
+      conclusion = matchingTable.conclusionAbove || undefined;
+    }
   }
 
   console.log('✅ Результат проверки:', {
     parameterValue,
     normRange: { min: minNorm, max: maxNorm },
+    borderlineRange: { low: borderlineLow, high: borderlineHigh },
     status,
     conclusion,
   });
@@ -152,6 +167,7 @@ export const checkParameterNorms = (
   return {
     status,
     normRange: { min: minNorm, max: maxNorm },
+    borderlineRange: { low: borderlineLow, high: borderlineHigh },
     conclusion,
     matchedRow,
   };

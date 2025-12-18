@@ -44,7 +44,13 @@ const StudyParametersForm = ({
           const hasCustomNorm = normCheck && normCheck.normRange;
           const status = !isNaN(value) 
             ? (hasCustomNorm 
-                ? (normCheck.status === 'normal' ? 'success' : normCheck.status === 'below' ? 'warning' : 'danger')
+                ? (normCheck.status === 'normal' 
+                    ? 'success' 
+                    : normCheck.status === 'borderline_low' || normCheck.status === 'borderline_high'
+                    ? 'warning'
+                    : normCheck.status === 'below' 
+                    ? 'warning' 
+                    : 'danger')
                 : getParameterStatus(value, param.normalRange))
             : null;
 
@@ -89,7 +95,7 @@ const StudyParametersForm = ({
                 />
                 {status && (
                   <Badge
-                    variant={status === 'success' ? 'default' : 'destructive'}
+                    variant={status === 'success' ? 'default' : status === 'warning' ? 'secondary' : 'destructive'}
                     className={
                       status === 'success'
                         ? 'bg-green-500'
@@ -98,7 +104,17 @@ const StudyParametersForm = ({
                         : 'bg-red-500'
                     }
                   >
-                    {status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено'}
+                    {status === 'success' 
+                      ? 'Норма' 
+                      : status === 'warning' 
+                        ? (normCheck?.status === 'borderline_low' || normCheck?.status === 'borderline_high'
+                            ? 'Пограничное'
+                            : normCheck?.status === 'below'
+                            ? 'Снижено'
+                            : 'Повышено')
+                        : normCheck?.status === 'above'
+                        ? 'Повышено'
+                        : 'Снижено'}
                   </Badge>
                 )}
               </div>
