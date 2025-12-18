@@ -31,7 +31,7 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
 
   return (
     <div className="space-y-4">
-      {tables.map((table) => {
+      {tables.map((table) => (
         <Card key={table.id}>
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -46,7 +46,7 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
                     </Badge>
                   )}
                 </CardTitle>
-                <CardDescription className="mt-2 space-y-1">
+                <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Icon name="Users" size={14} />
                     {PATIENT_CATEGORIES[table.category]}
@@ -59,7 +59,7 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
                     <Icon name="Clock" size={12} />
                     Обновлено: {new Date(table.updatedAt).toLocaleDateString('ru-RU')}
                   </div>
-                </CardDescription>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -106,7 +106,7 @@ export const NormTableList = ({ tables, onEdit, onDelete }: NormTableListProps) 
                     <thead className="bg-muted">
                       <tr>
                         <th className="text-left p-2 font-medium">Диапазон</th>
-                        <th className="text-left p-2 font-medium">Норма {table.parameter}</th>
+                        <th className="text-left p-2 font-medium">Норма {getParameterName(table.studyType, table.parameter)}</th>
                       </tr>
                     </thead>
                     <tbody>
