@@ -277,6 +277,7 @@ const MainTabs = ({
           onImportProtocols={importProtocols}
           onSearchChange={fetchProtocols}
           getParameterStatus={getParameterStatus}
+          normTables={normTables}
         />
       </TabsContent>
     </Tabs>

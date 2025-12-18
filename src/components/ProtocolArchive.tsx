@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import Icon from '@/components/ui/icon';
 import { Protocol, studyTypes } from '@/types/medical';
+import { NormTable } from '@/types/norms';
+import { checkParameterNorms } from '@/utils/normsChecker';
 import ProtocolEditModal from './ProtocolEditModal';
 import ProtocolImportModal from './ProtocolImportModal';
 import { exportProtocolsToExcel, exportSingleProtocolToExcel } from '@/utils/excelExport';
@@ -33,6 +35,7 @@ type ProtocolArchiveProps = {
   onImportProtocols: (protocols: ImportedProtocol[]) => Promise<void>;
   onSearchChange: (filters: any) => void;
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
+  normTables: NormTable[];
 };
 
 const ProtocolArchive = ({
@@ -45,6 +48,7 @@ const ProtocolArchive = ({
   onImportProtocols,
   onSearchChange,
   getParameterStatus,
+  normTables,
 }: ProtocolArchiveProps) => {
   const [searchName, setSearchName] = useState('');
   const [searchStudyType, setSearchStudyType] = useState('');
@@ -323,28 +327,45 @@ const ProtocolArchive = ({
                         <Icon name="Activity" size={16} />
                         Показатели:
                       </h4>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
                         {Object.entries(protocol.results).map(([key, value]) => {
                           const study = studyTypes.find(s => s.name === protocol.studyType);
                           const param = study?.parameters.find(p => p.id === key);
                           if (!param) return null;
 
-                          const status = getParameterStatus(value, param.normalRange);
+                          const normCheck = protocol.patientData.age
+                            ? checkParameterNorms(param.id, value, protocol.patientData, normTables, study.id)
+                            : null;
+
+                          const hasCustomNorm = normCheck && normCheck.normRange;
+                          const displayRange = hasCustomNorm ? normCheck.normRange : param.normalRange;
+
+                          let status: 'success' | 'warning' | 'danger';
+                          if (hasCustomNorm) {
+                            status = normCheck.status === 'normal' ? 'success' : normCheck.status === 'below' ? 'warning' : 'danger';
+                          } else {
+                            status = getParameterStatus(value, param.normalRange);
+                          }
+
+                          const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено';
 
                           return (
-                            <div key={key} className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">{param.name}:</span>
-                              <span className="font-medium flex items-center gap-2">
-                                {value} {param.unit}
-                                <div
-                                  className={`h-2 w-2 rounded-full ${
-                                    status === 'success'
-                                      ? 'bg-green-500'
-                                      : status === 'warning'
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-500'
-                                  }`}
-                                />
+                            <div key={key} className="flex items-center gap-2 text-sm p-2 bg-muted/30 rounded">
+                              <span className="text-muted-foreground flex-1">{param.name}:</span>
+                              <span className="font-medium w-24 text-right">{value} {param.unit}</span>
+                              <span className="text-xs text-muted-foreground w-32 text-center">
+                                {displayRange.min.toFixed(1)} - {displayRange.max.toFixed(1)}
+                              </span>
+                              <span
+                                className={`text-xs font-medium w-20 text-center ${
+                                  status === 'success'
+                                    ? 'text-green-600'
+                                    : status === 'warning'
+                                    ? 'text-yellow-600'
+                                    : 'text-red-600'
+                                }`}
+                              >
+                                {statusText}
                               </span>
                             </div>
                           );
