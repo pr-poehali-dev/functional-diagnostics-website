@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import { StudyType, PatientData, Protocol, studyTypes } from '@/types/medical';
@@ -26,6 +27,8 @@ type MainTabsProps = {
   openQuickInput: () => void;
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
   generateConclusion: () => string;
+  conclusion: string;
+  setConclusion: (value: string) => void;
   handleGenerateProtocol: () => void;
   protocols: Protocol[];
   protocolsLoading: boolean;
@@ -52,6 +55,8 @@ const MainTabs = ({
   openQuickInput,
   getParameterStatus,
   generateConclusion,
+  conclusion,
+  setConclusion,
   handleGenerateProtocol,
   protocols,
   protocolsLoading,
@@ -224,11 +229,27 @@ const MainTabs = ({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Icon name="FileText" size={20} />
-                    Предварительное заключение
+                    Заключение
                   </CardTitle>
+                  <CardDescription>
+                    Вы можете отредактировать заключение вручную перед созданием протокола
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed">{generateConclusion()}</p>
+                <CardContent className="space-y-2">
+                  <Textarea
+                    value={conclusion}
+                    onChange={(e) => setConclusion(e.target.value)}
+                    placeholder="Введите заключение..."
+                    className="min-h-[120px]"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConclusion(generateConclusion())}
+                  >
+                    <Icon name="RefreshCw" size={16} className="mr-2" />
+                    Обновить автоматически
+                  </Button>
                 </CardContent>
               </Card>
             )}

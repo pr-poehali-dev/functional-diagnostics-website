@@ -26,6 +26,8 @@ const Index = () => {
     patientData,
     parameters,
     setParameters,
+    conclusion,
+    setConclusion,
     protocols,
     protocolsLoading,
     fetchProtocols,
@@ -119,6 +121,8 @@ const Index = () => {
           openQuickInput={openQuickInput}
           getParameterStatus={getParameterStatus}
           generateConclusion={generateConclusion}
+          conclusion={conclusion}
+          setConclusion={setConclusion}
           handleGenerateProtocol={handleGenerateProtocolClick}
           protocols={protocols}
           protocolsLoading={protocolsLoading}

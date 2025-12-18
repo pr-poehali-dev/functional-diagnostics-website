@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { StudyType, PatientData, PatientAge, Protocol } from '@/types/medical';
 import { useProtocolsAPI } from './useProtocolsAPI';
@@ -17,6 +17,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     studyDate: new Date().toISOString().split('T')[0],
   });
   const [parameters, setParameters] = useState<Record<string, string>>({});
+  const [conclusion, setConclusion] = useState<string>('');
   const [activeTab, setActiveTab] = useState('home');
   const [isQuickInputOpen, setIsQuickInputOpen] = useState(false);
   const [fieldOrder, setFieldOrder] = useState<string[]>([]);
@@ -30,6 +31,17 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     deleteProtocol,
     importProtocols,
   } = useProtocolsAPI(authToken);
+
+  // Автоматически обновляем заключение при изменении параметров
+  useEffect(() => {
+    const hasData = Object.values(parameters).some(v => v !== '');
+    if (hasData && selectedStudy) {
+      const newConclusion = generateConclusion();
+      if (newConclusion !== conclusion) {
+        setConclusion(newConclusion);
+      }
+    }
+  }, [parameters, patientData, selectedStudy, normTables]);
 
   const calculateAgeFromDate = (birthDate: string, referenceDate: string = new Date().toISOString()): PatientAge => {
     if (!birthDate) {
@@ -100,7 +112,8 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   };
 
   const handleParameterChange = (id: string, value: string) => {
-    setParameters({ ...parameters, [id]: value });
+    const newParams = { ...parameters, [id]: value };
+    setParameters(newParams);
   };
 
   const handleQuickInputSave = (values: Record<string, string>) => {
@@ -212,7 +225,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
       patientName: patientData.name,
       patientData: { ...patientData },
       results,
-      conclusion: generateConclusion(),
+      conclusion: conclusion || generateConclusion(),
       signed,
     };
 
@@ -231,6 +244,8 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     setPatientData,
     parameters,
     setParameters,
+    conclusion,
+    setConclusion,
     protocols,
     protocolsLoading,
     fetchProtocols,

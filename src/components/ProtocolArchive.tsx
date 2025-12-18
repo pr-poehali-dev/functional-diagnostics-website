@@ -267,7 +267,7 @@ const ProtocolArchive = ({
                           <div>{protocol.studyType} • {protocol.patientData.studyDate}</div>
                           <div className="text-xs">
                             {protocol.patientData.gender === 'male' ? 'М' : 'Ж'}
-                            {protocol.patientData.age && <>, {protocol.patientData.age}</>}
+                            {protocol.patientData.age && <>, {protocol.patientData.age.years} лет {protocol.patientData.age.months} мес</>}
                             {protocol.patientData.weight && protocol.patientData.height && (
                               <> • {protocol.patientData.weight}кг, {protocol.patientData.height}см</>
                             )}
