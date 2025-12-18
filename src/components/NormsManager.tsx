@@ -8,36 +8,26 @@ import { StudyType, studyTypes } from '@/types/medical';
 import { NormTable, PatientCategory, PATIENT_CATEGORIES } from '@/types/norms';
 import { NormTableWizard } from './NormTableWizard';
 import { NormTableList } from './NormTableList';
+import { useNormTables } from '@/hooks/useNormTables';
 
 const STORAGE_KEY = 'norms_tables';
 
 export const NormsManager = () => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
+  const { normTables: loadedNormTables, loadNormTables: reloadNormTables } = useNormTables();
   const [normTables, setNormTables] = useState<NormTable[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<NormTable | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<PatientCategory | 'all'>('all');
 
-
   useEffect(() => {
-    loadNormTables();
-  }, []);
-
-  const loadNormTables = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setNormTables(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load norms tables:', e);
-        toast.error('Ошибка загрузки таблиц норм');
-      }
-    }
-  };
+    setNormTables(loadedNormTables);
+  }, [loadedNormTables]);
 
   const saveNormTables = (tables: NormTable[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tables));
     setNormTables(tables);
+    reloadNormTables();
   };
 
   const handleCreateTable = () => {
