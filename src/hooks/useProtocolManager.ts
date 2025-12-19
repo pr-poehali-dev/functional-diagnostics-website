@@ -112,7 +112,9 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   };
 
   const handleParameterChange = (id: string, value: string) => {
+    console.log('🔧 handleParameterChange:', { id, value, currentParams: parameters });
     const newParams = { ...parameters, [id]: value };
+    console.log('🔧 newParams:', newParams);
     setParameters(newParams);
   };
 
