@@ -329,7 +329,9 @@ const ProtocolArchive = ({
                         Показатели:
                       </h4>
                       <div className="space-y-2">
-                        {Object.entries(protocol.results).map(([key, value]) => {
+                        {Object.entries(protocol.results)
+                          .filter(([key]) => !key.endsWith('_min') && !key.endsWith('_max') && !key.endsWith('_manual'))
+                          .map(([key, value]) => {
                           const study = studyTypes.find(s => s.name === protocol.studyType);
                           const param = study?.parameters.find(p => p.id === key);
                           if (!param) return null;
@@ -350,22 +352,23 @@ const ProtocolArchive = ({
 
                           const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено';
                           
-                          const minMaxData = protocol.resultsMinMax?.[key];
-                          const hasMinMax = minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined);
+                          const minVal = protocol.results[`${key}_min`];
+                          const maxVal = protocol.results[`${key}_max`];
+                          const hasMinMax = minVal !== undefined || maxVal !== undefined;
 
                           return (
                             <div key={key} className="flex items-center gap-2 text-sm p-2 bg-muted/30 rounded">
                               <span className="text-muted-foreground flex-1">{param.name}:</span>
                               {hasMinMax ? (
-                                <div className="flex items-center gap-1 w-40 justify-end">
+                                <div className="flex items-center gap-1 w-48 justify-end">
                                   <span className="text-xs text-muted-foreground">
-                                    {minMaxData.min !== undefined && minMaxData.max !== undefined 
-                                      ? `${minMaxData.min}-${minMaxData.max}`
-                                      : minMaxData.min !== undefined 
-                                      ? `${minMaxData.min}`
-                                      : `${minMaxData.max}`}
+                                    {minVal !== undefined && maxVal !== undefined 
+                                      ? `${minVal}-${maxVal}`
+                                      : minVal !== undefined 
+                                      ? `от ${minVal}`
+                                      : `до ${maxVal}`}
                                   </span>
-                                  <span className="font-medium">({value} {param.unit})</span>
+                                  <span className="font-medium">(ср. {value} {param.unit})</span>
                                 </div>
                               ) : (
                                 <span className="font-medium w-24 text-right">{value} {param.unit}</span>

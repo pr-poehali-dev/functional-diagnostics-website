@@ -112,7 +112,8 @@ export const generateProtocolHTML = ({
           <thead>
             <tr>
               <th>Показатель</th>
-              <th>Значение</th>
+              <th>Мин-Макс</th>
+              <th>Среднее</th>
               <th>Норма</th>
               <th>Статус</th>
             </tr>

@@ -119,25 +119,24 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
   worksheetData.push([]);
 
   worksheetData.push(['ПОКАЗАТЕЛИ']);
-  worksheetData.push(['Параметр', 'Мин-Макс', 'Среднее', 'Ед. изм.', 'Норма']);
+  worksheetData.push(['Параметр', 'Мин', 'Макс', 'Среднее', 'Ед. изм.', 'Норма']);
 
   if (study) {
-    Object.entries(protocol.results).forEach(([key, value]) => {
-      const param = study.parameters.find(p => p.id === key);
-      if (param) {
-        const normalRange = `${param.normalRange.min}-${param.normalRange.max}`;
-        const minMaxData = protocol.resultsMinMax?.[key];
-        
-        if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
-          const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
-            ? `${minMaxData.min}-${minMaxData.max}`
-            : minMaxData.min !== undefined 
-            ? `${minMaxData.min}`
-            : `${minMaxData.max}`;
-          worksheetData.push([param.name, minMaxText, value, param.unit, normalRange]);
-        } else {
-          worksheetData.push([param.name, '', value, param.unit, normalRange]);
-        }
+    const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
+    
+    study.parameters.forEach((param) => {
+      const value = protocol.results[param.id];
+      if (value === undefined) return;
+      
+      const normalRange = `${param.normalRange.min}-${param.normalRange.max}`;
+      const hasMinMax = parametersWithMinMax.includes(param.id);
+      
+      if (hasMinMax) {
+        const minVal = protocol.results[`${param.id}_min`] || '';
+        const maxVal = protocol.results[`${param.id}_max`] || '';
+        worksheetData.push([param.name, minVal, maxVal, value, param.unit, normalRange]);
+      } else {
+        worksheetData.push([param.name, '', '', value, param.unit, normalRange]);
       }
     });
   }
@@ -150,7 +149,8 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
 
   const columnWidths = [
     { wch: 25 },
-    { wch: 15 },
+    { wch: 10 },
+    { wch: 10 },
     { wch: 15 },
     { wch: 10 },
     { wch: 15 },

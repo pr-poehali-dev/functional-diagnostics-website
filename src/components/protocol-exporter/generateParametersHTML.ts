@@ -18,6 +18,7 @@ export const generateParametersHTML = ({
   if (!study) return '';
 
   return Object.entries(protocol.results)
+    .filter(([key]) => !key.endsWith('_min') && !key.endsWith('_max') && !key.endsWith('_manual'))
     .map(([key, value]) => {
       const param = study.parameters.find(p => p.id === key);
       if (!param) return '';
@@ -39,22 +40,27 @@ export const generateParametersHTML = ({
       const statusColor = status === 'success' ? '#10b981' : status === 'warning' ? '#eab308' : '#ef4444';
       const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено';
 
-      const minMaxData = protocol.resultsMinMax?.[key];
-      const hasMinMax = minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined);
+      const minVal = protocol.results[`${key}_min`];
+      const maxVal = protocol.results[`${key}_max`];
+      const hasMinMax = minVal !== undefined || maxVal !== undefined;
       
       let valueDisplay = `${value} ${param.unit}`;
+      let minMaxDisplay = '';
+      
       if (hasMinMax) {
-        const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
-          ? `${minMaxData.min}-${minMaxData.max}`
-          : minMaxData.min !== undefined 
-          ? `${minMaxData.min}`
-          : `${minMaxData.max}`;
-        valueDisplay = `<span style="color: #6b7280; font-size: 12px;">${minMaxText} →</span> ${value} ${param.unit}`;
+        const minMaxText = minVal !== undefined && maxVal !== undefined 
+          ? `${minVal}-${maxVal}`
+          : minVal !== undefined 
+          ? `от ${minVal}`
+          : `до ${maxVal}`;
+        minMaxDisplay = `<span style="color: #6b7280; font-size: 12px;">${minMaxText}</span>`;
+        valueDisplay = `${value} ${param.unit}`;
       }
 
       return `
         <tr>
           <td style="padding: 8px; border: 1px solid #e5e7eb;">${param.name}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${minMaxDisplay || '-'}</td>
           <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: 600;">${valueDisplay}</td>
           <td style="padding: 8px; border: 1px solid #e5e7eb;">${displayRange.min} - ${displayRange.max} ${param.unit}${hasCustomNorm ? ' <span style="color: #0ea5e9; font-size: 11px;">(табл.)</span>' : ''}</td>
           <td style="padding: 8px; border: 1px solid #e5e7eb; color: ${statusColor}; font-weight: 600;">${statusText}</td>
