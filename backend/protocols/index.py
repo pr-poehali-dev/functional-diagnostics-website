@@ -50,8 +50,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cur.execute("""
                     SELECT id, doctor_id, study_type, patient_name, patient_gender, 
                            patient_birth_date, patient_age, patient_weight, patient_height, 
-                           patient_bsa, ultrasound_device, study_date, results, conclusion, 
-                           signed, created_at 
+                           patient_bsa, ultrasound_device, study_date, results, results_min_max,
+                           conclusion, signed, created_at 
                     FROM t_p13795046_functional_diagnosti.protocols 
                     WHERE id = %s
                 """, (protocol_id,))
@@ -114,8 +114,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 query = f"""
                     SELECT id, doctor_id, study_type, patient_name, patient_gender, 
                            patient_birth_date, patient_age, patient_weight, patient_height, 
-                           patient_bsa, ultrasound_device, study_date, results, conclusion, 
-                           signed, created_at 
+                           patient_bsa, ultrasound_device, study_date, results, results_min_max,
+                           conclusion, signed, created_at 
                     FROM t_p13795046_functional_diagnosti.protocols 
                     {where_sql}
                     ORDER BY {sort_by} {sort_order}
@@ -173,12 +173,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if patient_age and isinstance(patient_age, dict):
                 patient_age = json.dumps(patient_age)
             
+            results_min_max = body_data.get('results_min_max')
+            results_min_max_json = json.dumps(results_min_max) if results_min_max else None
+            
             cur.execute("""
                 INSERT INTO t_p13795046_functional_diagnosti.protocols 
                 (doctor_id, study_type, patient_name, patient_gender, patient_birth_date, 
                  patient_age, patient_weight, patient_height, patient_bsa, ultrasound_device, 
-                 study_date, results, conclusion, signed, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                 study_date, results, results_min_max, conclusion, signed, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 RETURNING id
             """, (
                 doctor_id,
@@ -193,6 +196,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data.get('ultrasound_device'),
                 body_data['study_date'],
                 json.dumps(body_data['results']),
+                results_min_max_json,
                 body_data['conclusion'],
                 body_data.get('signed', False)
             ))
@@ -288,6 +292,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if 'results' in body_data:
                 update_fields.append("results = %s")
                 params.append(json.dumps(body_data['results']))
+            
+            if 'results_min_max' in body_data:
+                update_fields.append("results_min_max = %s")
+                results_min_max = body_data['results_min_max']
+                params.append(json.dumps(results_min_max) if results_min_max else None)
             
             if 'conclusion' in body_data:
                 update_fields.append("conclusion = %s")
@@ -409,7 +418,8 @@ def format_protocol_row(row: tuple) -> Dict[str, Any]:
         'ultrasound_device': row[10],
         'study_date': row[11].isoformat() if row[11] else None,
         'results': row[12],
-        'conclusion': row[13],
-        'signed': row[14],
-        'created_at': row[15].isoformat() if row[15] else None
+        'results_min_max': row[13],
+        'conclusion': row[14],
+        'signed': row[15],
+        'created_at': row[16].isoformat() if row[16] else None
     }

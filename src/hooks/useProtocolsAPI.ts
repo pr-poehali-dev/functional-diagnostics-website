@@ -53,6 +53,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
           studyDate: p.study_date,
         },
         results: p.results,
+        resultsMinMax: p.results_min_max || undefined,
         conclusion: p.conclusion,
         signed: p.signed || false,
       }));
@@ -91,6 +92,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
           ultrasound_device: protocol.patientData.ultrasoundDevice || null,
           study_date: protocol.patientData.studyDate,
           results: protocol.results,
+          results_min_max: protocol.resultsMinMax || null,
           conclusion: protocol.conclusion,
           signed: protocol.signed || false,
         }),
@@ -134,6 +136,7 @@ export const useProtocolsAPI = (authToken: string | null) => {
         if (updates.patientData.studyDate) payload.study_date = updates.patientData.studyDate;
       }
       if (updates.results) payload.results = updates.results;
+      if (updates.resultsMinMax) payload.results_min_max = updates.resultsMinMax;
       if (updates.conclusion) payload.conclusion = updates.conclusion;
       if (updates.signed !== undefined) payload.signed = updates.signed;
 
