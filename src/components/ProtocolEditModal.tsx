@@ -42,6 +42,10 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
 
   useEffect(() => {
     if (protocol) {
+      console.log('🔍 Загрузка протокола в редактор:', {
+        results: protocol.results,
+        resultsMinMax: protocol.resultsMinMax,
+      });
       setFormData({
         patientName: protocol.patientName,
         gender: protocol.patientData.gender,

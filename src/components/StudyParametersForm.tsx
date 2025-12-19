@@ -47,9 +47,9 @@ const StudyParametersForm = ({
     const maxVal = parseFloat(newMax);
     
     if (!isNaN(minVal) && !isNaN(maxVal)) {
-      const avg = ((minVal + maxVal) / 2).toFixed(1);
+      const avg = Math.round((minVal + maxVal) / 2);
       console.log('✅ Рассчитано среднее:', avg);
-      onParameterChange(paramId, avg);
+      onParameterChange(paramId, avg.toString());
     } else if (!isNaN(minVal) && isNaN(maxVal)) {
       console.log('✅ Только min:', minVal);
       onParameterChange(paramId, minVal.toString());

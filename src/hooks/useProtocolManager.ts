@@ -223,7 +223,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     selectedStudy.parameters.forEach(param => {
       const value = parseFloat(parameters[param.id]);
       if (!isNaN(value)) {
-        results[param.id] = value;
+        results[param.id] = Math.round(value);
         
         if (parametersWithMinMax.includes(param.id)) {
           const minVal = parseFloat(parameters[`${param.id}_min`]);
@@ -231,12 +231,18 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
           
           if (!isNaN(minVal) || !isNaN(maxVal)) {
             resultsMinMax[param.id] = {
-              min: !isNaN(minVal) ? minVal : undefined,
-              max: !isNaN(maxVal) ? maxVal : undefined,
+              min: !isNaN(minVal) ? Math.round(minVal) : undefined,
+              max: !isNaN(maxVal) ? Math.round(maxVal) : undefined,
             };
           }
         }
       }
+    });
+
+    console.log('💾 Создание протокола:', {
+      results,
+      resultsMinMax,
+      parameters,
     });
 
     const protocol = {

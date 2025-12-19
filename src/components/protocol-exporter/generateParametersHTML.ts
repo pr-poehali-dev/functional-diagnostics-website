@@ -17,6 +17,11 @@ export const generateParametersHTML = ({
 }: GenerateParametersHTMLParams): string => {
   if (!study) return '';
 
+  console.log('📄 generateParametersHTML:', {
+    results: protocol.results,
+    resultsMinMax: protocol.resultsMinMax,
+  });
+
   return Object.entries(protocol.results)
     .filter(([key]) => !key.endsWith('_min') && !key.endsWith('_max') && !key.endsWith('_manual'))
     .map(([key, value]) => {
