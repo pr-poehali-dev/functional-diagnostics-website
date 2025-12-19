@@ -29,11 +29,17 @@ const StudyParametersForm = ({
   const handleMinMaxChange = (paramId: string, field: 'min' | 'max', value: string) => {
     const minKey = `${paramId}_min`;
     const maxKey = `${paramId}_max`;
+    const manualKey = `${paramId}_manual`;
     
     const newMin = field === 'min' ? value : (parameters[minKey] || '');
     const newMax = field === 'max' ? value : (parameters[maxKey] || '');
     
     onParameterChange(field === 'min' ? minKey : maxKey, value);
+    
+    // Не пересчитываем среднее, если оно было введено вручную
+    if (parameters[manualKey] === 'true') {
+      return;
+    }
     
     const minVal = parseFloat(newMin);
     const maxVal = parseFloat(newMax);
@@ -48,6 +54,19 @@ const StudyParametersForm = ({
     } else {
       onParameterChange(paramId, '');
     }
+  };
+
+  const handleManualAvgChange = (paramId: string, value: string) => {
+    const manualKey = `${paramId}_manual`;
+    onParameterChange(paramId, value);
+    onParameterChange(manualKey, 'true');
+  };
+
+  const resetToAutoCalculation = (paramId: string) => {
+    const manualKey = `${paramId}_manual`;
+    onParameterChange(manualKey, '');
+    // Пересчитываем среднее
+    handleMinMaxChange(paramId, 'min', parameters[`${paramId}_min`] || '');
   };
 
   return (
@@ -86,6 +105,8 @@ const StudyParametersForm = ({
             : param.normalRange;
 
           if (hasMinMax) {
+            const isManual = parameters[`${param.id}_manual`] === 'true';
+            
             return (
               <div key={param.id} className="space-y-2">
                 <Label htmlFor={param.id}>{param.name}</Label>
@@ -114,10 +135,12 @@ const StudyParametersForm = ({
                     <Input
                       id={param.id}
                       type="number"
-                      placeholder="Авто"
+                      placeholder={isManual ? "Вручную" : "Авто"}
                       value={parameters[param.id] || ''}
-                      readOnly
+                      onChange={(e) => handleManualAvgChange(param.id, e.target.value)}
                       className={`w-24 ${
+                        isManual ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-300' : ''
+                      } ${
                         status === 'danger'
                           ? 'border-red-500'
                           : status === 'warning'
@@ -128,6 +151,16 @@ const StudyParametersForm = ({
                       }`}
                     />
                     <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
+                    {isManual && (
+                      <button
+                        type="button"
+                        onClick={() => resetToAutoCalculation(param.id)}
+                        className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                        title="Вернуться к автоматическому расчёту"
+                      >
+                        Авто
+                      </button>
+                    )}
                   </div>
                   <div className="flex gap-2 items-center">
                     <Input
