@@ -112,10 +112,12 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   };
 
   const handleParameterChange = (id: string, value: string) => {
-    console.log('🔧 handleParameterChange:', { id, value, currentParams: parameters });
-    const newParams = { ...parameters, [id]: value };
-    console.log('🔧 newParams:', newParams);
-    setParameters(newParams);
+    console.log('🔧 handleParameterChange:', { id, value });
+    setParameters((prev) => {
+      const newParams = { ...prev, [id]: value };
+      console.log('🔧 newParams:', newParams);
+      return newParams;
+    });
   };
 
   const handleQuickInputSave = (values: Record<string, string>) => {
