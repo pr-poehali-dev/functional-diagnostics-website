@@ -24,6 +24,7 @@ export const exportProtocolsToExcel = (protocols: Protocol[], filename: string =
 
   protocols.forEach((protocol) => {
     const resultsString = Object.entries(protocol.results)
+      .filter(([key]) => !key.endsWith('_min') && !key.endsWith('_max') && !key.endsWith('_manual'))
       .map(([key, value]) => {
         const study = studyTypes.find(s => s.name === protocol.studyType);
         const param = study?.parameters.find(p => p.id === key);
@@ -32,14 +33,14 @@ export const exportProtocolsToExcel = (protocols: Protocol[], filename: string =
         const minMaxData = protocol.resultsMinMax?.[key];
         if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
           const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
-            ? `${minMaxData.min}-${minMaxData.max}`
+            ? `${Math.round(minMaxData.min)}-${Math.round(minMaxData.max)}`
             : minMaxData.min !== undefined 
-            ? `${minMaxData.min}`
-            : `${minMaxData.max}`;
-          return `${param.name}: ${minMaxText} (средн. ${value}) ${param.unit}`;
+            ? `${Math.round(minMaxData.min)}`
+            : `${Math.round(minMaxData.max)}`;
+          return `${param.name}: ${minMaxText} (средн. ${Math.round(value)}) ${param.unit}`;
         }
         
-        return `${param.name}: ${value} ${param.unit}`;
+        return `${param.name}: ${Math.round(value)} ${param.unit}`;
       })
       .filter(Boolean)
       .join('; ');
@@ -122,21 +123,19 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
   worksheetData.push(['Параметр', 'Мин', 'Макс', 'Среднее', 'Ед. изм.', 'Норма']);
 
   if (study) {
-    const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
-    
     study.parameters.forEach((param) => {
       const value = protocol.results[param.id];
       if (value === undefined) return;
       
       const normalRange = `${param.normalRange.min}-${param.normalRange.max}`;
-      const hasMinMax = parametersWithMinMax.includes(param.id);
+      const minMaxData = protocol.resultsMinMax?.[param.id];
       
-      if (hasMinMax) {
-        const minVal = protocol.results[`${param.id}_min`] || '';
-        const maxVal = protocol.results[`${param.id}_max`] || '';
-        worksheetData.push([param.name, minVal, maxVal, value, param.unit, normalRange]);
+      if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
+        const minVal = minMaxData.min !== undefined ? Math.round(minMaxData.min) : '';
+        const maxVal = minMaxData.max !== undefined ? Math.round(minMaxData.max) : '';
+        worksheetData.push([param.name, minVal, maxVal, Math.round(value), param.unit, normalRange]);
       } else {
-        worksheetData.push([param.name, '', '', value, param.unit, normalRange]);
+        worksheetData.push([param.name, '', '', Math.round(value), param.unit, normalRange]);
       }
     });
   }

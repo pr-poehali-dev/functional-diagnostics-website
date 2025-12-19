@@ -34,6 +34,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
     ultrasoundDevice: '',
     conclusion: '',
     results: {} as Record<string, number | string>,
+    resultsMinMax: {} as Record<string, { min?: number; max?: number }>,
   });
   
   const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
@@ -51,6 +52,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
         ultrasoundDevice: protocol.patientData.ultrasoundDevice || '',
         conclusion: protocol.conclusion,
         results: protocol.results,
+        resultsMinMax: protocol.resultsMinMax || {},
       });
     }
   }, [protocol]);
@@ -99,6 +101,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
         ultrasoundDevice: formData.ultrasoundDevice,
       },
       results: formData.results,
+      resultsMinMax: formData.resultsMinMax,
       conclusion: formData.conclusion,
     };
 
@@ -125,37 +128,42 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
   };
 
   const handleMinMaxChange = (paramId: string, field: 'min' | 'max', value: string) => {
-    const minKey = `${paramId}_min`;
-    const maxKey = `${paramId}_max`;
-    const manualKey = `${paramId}_manual`;
-    
+    const newResultsMinMax = { ...formData.resultsMinMax };
     const newResults = { ...formData.results };
     
+    if (!newResultsMinMax[paramId]) {
+      newResultsMinMax[paramId] = {};
+    }
+    
     if (value === '') {
-      delete newResults[field === 'min' ? minKey : maxKey];
+      delete newResultsMinMax[paramId][field];
+      if (!newResultsMinMax[paramId].min && !newResultsMinMax[paramId].max) {
+        delete newResultsMinMax[paramId];
+      }
     } else {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        newResults[field === 'min' ? minKey : maxKey] = numValue;
+        newResultsMinMax[paramId][field] = numValue;
       }
     }
     
+    const manualKey = `${paramId}_manual`;
     if (newResults[manualKey] !== 'true') {
-      const minVal = parseFloat(String(newResults[minKey] || ''));
-      const maxVal = parseFloat(String(newResults[maxKey] || ''));
+      const minVal = newResultsMinMax[paramId]?.min;
+      const maxVal = newResultsMinMax[paramId]?.max;
       
-      if (!isNaN(minVal) && !isNaN(maxVal)) {
-        newResults[paramId] = parseFloat(((minVal + maxVal) / 2).toFixed(1));
-      } else if (!isNaN(minVal)) {
+      if (minVal !== undefined && maxVal !== undefined) {
+        newResults[paramId] = Math.round((minVal + maxVal) / 2);
+      } else if (minVal !== undefined) {
         newResults[paramId] = minVal;
-      } else if (!isNaN(maxVal)) {
+      } else if (maxVal !== undefined) {
         newResults[paramId] = maxVal;
       } else {
         delete newResults[paramId];
       }
     }
     
-    setFormData({ ...formData, results: newResults });
+    setFormData({ ...formData, results: newResults, resultsMinMax: newResultsMinMax });
   };
 
   if (!protocol) return null;
@@ -275,6 +283,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
                   const isManual = formData.results[`${param.id}_manual`] === 'true';
                   
                   if (hasMinMax) {
+                    const minMaxData = formData.resultsMinMax[param.id] || {};
                     return (
                       <div key={param.id} className="space-y-2">
                         <Label className="font-medium">{param.name}</Label>
@@ -283,7 +292,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
                             <Input
                               type="number"
                               placeholder="Мин"
-                              value={formData.results[`${param.id}_min`] || ''}
+                              value={minMaxData.min ?? ''}
                               onChange={(e) => handleMinMaxChange(param.id, 'min', e.target.value)}
                               className="w-24"
                             />
@@ -291,7 +300,7 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
                             <Input
                               type="number"
                               placeholder="Макс"
-                              value={formData.results[`${param.id}_max`] || ''}
+                              value={minMaxData.max ?? ''}
                               onChange={(e) => handleMinMaxChange(param.id, 'max', e.target.value)}
                               className="w-24"
                             />
@@ -301,12 +310,12 @@ const ProtocolEditModal = ({ protocol, isOpen, onClose, onSave }: ProtocolEditMo
                             <Input
                               type="number"
                               placeholder={isManual ? "Вручную" : "Авто"}
-                              value={formData.results[param.id] || ''}
+                              value={formData.results[param.id] ?? ''}
                               onChange={(e) => {
                                 const newResults = { ...formData.results };
                                 const numValue = parseFloat(e.target.value);
                                 if (!isNaN(numValue)) {
-                                  newResults[param.id] = numValue;
+                                  newResults[param.id] = Math.round(numValue);
                                   newResults[`${param.id}_manual`] = 'true';
                                 } else if (e.target.value === '') {
                                   delete newResults[param.id];

@@ -40,21 +40,21 @@ export const generateParametersHTML = ({
       const statusColor = status === 'success' ? '#10b981' : status === 'warning' ? '#eab308' : '#ef4444';
       const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено';
 
-      const minVal = protocol.results[`${key}_min`];
-      const maxVal = protocol.results[`${key}_max`];
+      const minMaxData = protocol.resultsMinMax?.[key];
+      const minVal = minMaxData?.min;
+      const maxVal = minMaxData?.max;
       const hasMinMax = minVal !== undefined || maxVal !== undefined;
       
-      let valueDisplay = `${value} ${param.unit}`;
+      const valueDisplay = `${Math.round(value)} ${param.unit}`;
       let minMaxDisplay = '';
       
       if (hasMinMax) {
         const minMaxText = minVal !== undefined && maxVal !== undefined 
-          ? `${minVal}-${maxVal}`
+          ? `${Math.round(minVal)}-${Math.round(maxVal)}`
           : minVal !== undefined 
-          ? `от ${minVal}`
-          : `до ${maxVal}`;
+          ? `от ${Math.round(minVal)}`
+          : `до ${Math.round(maxVal)}`;
         minMaxDisplay = `<span style="color: #6b7280; font-size: 12px;">${minMaxText}</span>`;
-        valueDisplay = `${value} ${param.unit}`;
       }
 
       return `
