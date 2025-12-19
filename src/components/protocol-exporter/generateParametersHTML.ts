@@ -39,10 +39,23 @@ export const generateParametersHTML = ({
       const statusColor = status === 'success' ? '#10b981' : status === 'warning' ? '#eab308' : '#ef4444';
       const statusText = status === 'success' ? 'Норма' : status === 'warning' ? 'Снижено' : 'Повышено';
 
+      const minMaxData = protocol.resultsMinMax?.[key];
+      const hasMinMax = minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined);
+      
+      let valueDisplay = `${value} ${param.unit}`;
+      if (hasMinMax) {
+        const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
+          ? `${minMaxData.min}-${minMaxData.max}`
+          : minMaxData.min !== undefined 
+          ? `${minMaxData.min}`
+          : `${minMaxData.max}`;
+        valueDisplay = `<span style="color: #6b7280; font-size: 12px;">${minMaxText} →</span> ${value} ${param.unit}`;
+      }
+
       return `
         <tr>
           <td style="padding: 8px; border: 1px solid #e5e7eb;">${param.name}</td>
-          <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: 600;">${value} ${param.unit}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: 600;">${valueDisplay}</td>
           <td style="padding: 8px; border: 1px solid #e5e7eb;">${displayRange.min} - ${displayRange.max} ${param.unit}${hasCustomNorm ? ' <span style="color: #0ea5e9; font-size: 11px;">(табл.)</span>' : ''}</td>
           <td style="padding: 8px; border: 1px solid #e5e7eb; color: ${statusColor}; font-weight: 600;">${statusText}</td>
         </tr>

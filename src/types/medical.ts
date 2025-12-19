@@ -38,6 +38,7 @@ export type Protocol = {
   patientName: string;
   patientData: PatientData;
   results: Record<string, number>;
+  resultsMinMax?: Record<string, { min?: number; max?: number }>;
   conclusion: string;
   signed?: boolean;
 };

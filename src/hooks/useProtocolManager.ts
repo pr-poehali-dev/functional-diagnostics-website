@@ -213,10 +213,25 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     }
 
     const results: Record<string, number> = {};
+    const resultsMinMax: Record<string, { min?: number; max?: number }> = {};
+    const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
+    
     selectedStudy.parameters.forEach(param => {
       const value = parseFloat(parameters[param.id]);
       if (!isNaN(value)) {
         results[param.id] = value;
+        
+        if (parametersWithMinMax.includes(param.id)) {
+          const minVal = parseFloat(parameters[`${param.id}_min`]);
+          const maxVal = parseFloat(parameters[`${param.id}_max`]);
+          
+          if (!isNaN(minVal) || !isNaN(maxVal)) {
+            resultsMinMax[param.id] = {
+              min: !isNaN(minVal) ? minVal : undefined,
+              max: !isNaN(maxVal) ? maxVal : undefined,
+            };
+          }
+        }
       }
     });
 
@@ -225,6 +240,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
       patientName: patientData.name,
       patientData: { ...patientData },
       results,
+      resultsMinMax: Object.keys(resultsMinMax).length > 0 ? resultsMinMax : undefined,
       conclusion: conclusion || generateConclusion(),
       signed,
     };

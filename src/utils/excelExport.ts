@@ -27,7 +27,19 @@ export const exportProtocolsToExcel = (protocols: Protocol[], filename: string =
       .map(([key, value]) => {
         const study = studyTypes.find(s => s.name === protocol.studyType);
         const param = study?.parameters.find(p => p.id === key);
-        return param ? `${param.name}: ${value} ${param.unit}` : '';
+        if (!param) return '';
+        
+        const minMaxData = protocol.resultsMinMax?.[key];
+        if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
+          const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
+            ? `${minMaxData.min}-${minMaxData.max}`
+            : minMaxData.min !== undefined 
+            ? `${minMaxData.min}`
+            : `${minMaxData.max}`;
+          return `${param.name}: ${minMaxText} (средн. ${value}) ${param.unit}`;
+        }
+        
+        return `${param.name}: ${value} ${param.unit}`;
       })
       .filter(Boolean)
       .join('; ');
@@ -107,14 +119,25 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
   worksheetData.push([]);
 
   worksheetData.push(['ПОКАЗАТЕЛИ']);
-  worksheetData.push(['Параметр', 'Значение', 'Ед. изм.', 'Норма']);
+  worksheetData.push(['Параметр', 'Мин-Макс', 'Среднее', 'Ед. изм.', 'Норма']);
 
   if (study) {
     Object.entries(protocol.results).forEach(([key, value]) => {
       const param = study.parameters.find(p => p.id === key);
       if (param) {
         const normalRange = `${param.normalRange.min}-${param.normalRange.max}`;
-        worksheetData.push([param.name, value, param.unit, normalRange]);
+        const minMaxData = protocol.resultsMinMax?.[key];
+        
+        if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
+          const minMaxText = minMaxData.min !== undefined && minMaxData.max !== undefined 
+            ? `${minMaxData.min}-${minMaxData.max}`
+            : minMaxData.min !== undefined 
+            ? `${minMaxData.min}`
+            : `${minMaxData.max}`;
+          worksheetData.push([param.name, minMaxText, value, param.unit, normalRange]);
+        } else {
+          worksheetData.push([param.name, '', value, param.unit, normalRange]);
+        }
       }
     });
   }
@@ -127,6 +150,7 @@ export const exportSingleProtocolToExcel = (protocol: Protocol) => {
 
   const columnWidths = [
     { wch: 25 },
+    { wch: 15 },
     { wch: 15 },
     { wch: 10 },
     { wch: 15 },
