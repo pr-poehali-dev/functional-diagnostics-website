@@ -161,7 +161,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     selectedStudy.parameters.forEach(param => {
       const value = parseFloat(parameters[param.id]);
       if (!isNaN(value)) {
-        numericParams[param.id] = value;
+        numericParams[param.id] = Math.round(value);
       }
     });
 
@@ -190,7 +190,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     }
 
     const abnormal = selectedStudy.parameters.filter(param => {
-      const value = parseFloat(parameters[param.id]);
+      const value = Math.round(parseFloat(parameters[param.id]));
       if (isNaN(value)) return false;
       return value < param.normalRange.min || value > param.normalRange.max;
     });
@@ -200,7 +200,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     }
 
     const issues = abnormal.map(param => {
-      const value = parseFloat(parameters[param.id]);
+      const value = Math.round(parseFloat(parameters[param.id]));
       if (value < param.normalRange.min) {
         return `снижение ${param.name} до ${value} ${param.unit}`;
       }
