@@ -24,6 +24,32 @@ const StudyParametersForm = ({
   patientData,
   normTables,
 }: StudyParametersFormProps) => {
+  const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
+
+  const handleMinMaxChange = (paramId: string, field: 'min' | 'max', value: string) => {
+    const minKey = `${paramId}_min`;
+    const maxKey = `${paramId}_max`;
+    
+    const newMin = field === 'min' ? value : (parameters[minKey] || '');
+    const newMax = field === 'max' ? value : (parameters[maxKey] || '');
+    
+    onParameterChange(field === 'min' ? minKey : maxKey, value);
+    
+    const minVal = parseFloat(newMin);
+    const maxVal = parseFloat(newMax);
+    
+    if (!isNaN(minVal) && !isNaN(maxVal)) {
+      const avg = ((minVal + maxVal) / 2).toFixed(1);
+      onParameterChange(paramId, avg);
+    } else if (!isNaN(minVal) && isNaN(maxVal)) {
+      onParameterChange(paramId, minVal.toString());
+    } else if (isNaN(minVal) && !isNaN(maxVal)) {
+      onParameterChange(paramId, maxVal.toString());
+    } else {
+      onParameterChange(paramId, '');
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -35,6 +61,7 @@ const StudyParametersForm = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {selectedStudy.parameters.map((param) => {
+          const hasMinMax = parametersWithMinMax.includes(param.id);
           const value = parseFloat(parameters[param.id]);
           
           const normCheck = patientData.age 
@@ -57,6 +84,100 @@ const StudyParametersForm = ({
           const displayRange = hasCustomNorm 
             ? normCheck.normRange 
             : param.normalRange;
+
+          if (hasMinMax) {
+            return (
+              <div key={param.id} className="space-y-2">
+                <Label htmlFor={param.id}>{param.name}</Label>
+                <div className="flex gap-2 items-center flex-wrap">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id={`${param.id}_min`}
+                      type="number"
+                      placeholder="Мин"
+                      value={parameters[`${param.id}_min`] || ''}
+                      onChange={(e) => handleMinMaxChange(param.id, 'min', e.target.value)}
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">-</span>
+                    <Input
+                      id={`${param.id}_max`}
+                      type="number"
+                      placeholder="Макс"
+                      value={parameters[`${param.id}_max`] || ''}
+                      onChange={(e) => handleMinMaxChange(param.id, 'max', e.target.value)}
+                      className="w-20"
+                    />
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Среднее:</span>
+                    <Input
+                      id={param.id}
+                      type="number"
+                      placeholder="Авто"
+                      value={parameters[param.id] || ''}
+                      readOnly
+                      className={`w-24 ${
+                        status === 'danger'
+                          ? 'border-red-500'
+                          : status === 'warning'
+                          ? 'border-yellow-500'
+                          : status === 'success'
+                          ? 'border-green-500'
+                          : ''
+                      }`}
+                    />
+                    <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Мин норма"
+                      value={displayRange?.min?.toFixed(1) || ''}
+                      readOnly
+                      className="w-24 bg-muted text-center text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Макс норма"
+                      value={displayRange?.max?.toFixed(1) || ''}
+                      readOnly
+                      className="w-24 bg-muted text-center text-sm"
+                    />
+                    {status && (
+                      <Badge
+                        variant={status === 'success' ? 'default' : status === 'warning' ? 'secondary' : 'destructive'}
+                        className={
+                          status === 'success'
+                            ? 'bg-green-500'
+                            : status === 'warning'
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }
+                      >
+                        {status === 'success' 
+                          ? 'Норма' 
+                          : normCheck?.status === 'borderline_low' || normCheck?.status === 'borderline_high'
+                            ? 'Пограничное'
+                            : normCheck?.status === 'below'
+                            ? 'Снижено'
+                            : normCheck?.status === 'above'
+                            ? 'Повышено'
+                            : status === 'warning'
+                            ? 'Снижено'
+                            : 'Повышено'}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {normCheck?.conclusion && status !== 'success' && (
+                  <p className="text-xs p-2 rounded bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300">
+                    {normCheck.conclusion}
+                  </p>
+                )}
+              </div>
+            );
+          }
 
           return (
             <div key={param.id} className="space-y-2">
