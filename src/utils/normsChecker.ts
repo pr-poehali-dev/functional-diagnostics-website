@@ -233,17 +233,15 @@ export const generateConclusionFromNorms = (
   }
 
   if (parameters && parameterNames) {
-    Object.entries(checks).forEach(([paramName, result]) => {
-      const value = parameters[paramName];
-      const name = parameterNames[paramName] || paramName;
-      
-      if (value !== undefined && !isNaN(value)) {
+    Object.entries(parameters).forEach(([paramName, value]) => {
+      if (value !== undefined && !isNaN(value) && value !== 0) {
+        const result = checks[paramName];
+        const name = parameterNames[paramName] || paramName;
         const formattedValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
-        const range = result.normRange;
         
-        if (range) {
-          const minStr = Number.isInteger(range.min) ? range.min.toString() : range.min.toFixed(1);
-          const maxStr = Number.isInteger(range.max) ? range.max.toString() : range.max.toFixed(1);
+        if (result && result.normRange) {
+          const minStr = Number.isInteger(result.normRange.min) ? result.normRange.min.toString() : result.normRange.min.toFixed(1);
+          const maxStr = Number.isInteger(result.normRange.max) ? result.normRange.max.toString() : result.normRange.max.toFixed(1);
           conclusions.push(`${name}: ${formattedValue} (норма ${minStr}-${maxStr})`);
         } else {
           conclusions.push(`${name}: ${formattedValue}`);
