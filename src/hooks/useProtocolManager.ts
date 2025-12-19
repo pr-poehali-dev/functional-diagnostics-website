@@ -158,10 +158,26 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     if (!selectedStudy) return '';
     
     const numericParams: Record<string, number> = {};
+    const resultsMinMax: Record<string, { min?: number; max?: number }> = {};
+    const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
+    
     selectedStudy.parameters.forEach(param => {
       const value = parseFloat(parameters[param.id]);
       if (!isNaN(value)) {
         numericParams[param.id] = Math.round(value);
+        
+        // Собираем мин/макс значения
+        if (parametersWithMinMax.includes(param.id)) {
+          const minVal = parseFloat(parameters[`${param.id}_min`]);
+          const maxVal = parseFloat(parameters[`${param.id}_max`]);
+          
+          if (!isNaN(minVal) || !isNaN(maxVal)) {
+            resultsMinMax[param.id] = {
+              min: !isNaN(minVal) ? Math.round(minVal) : undefined,
+              max: !isNaN(maxVal) ? Math.round(maxVal) : undefined,
+            };
+          }
+        }
       }
     });
 
@@ -178,7 +194,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
         parameterNames[param.id] = param.name;
       });
 
-      const normConclusion = generateConclusionFromNorms(normChecks, numericParams, parameterNames);
+      const normConclusion = generateConclusionFromNorms(normChecks, numericParams, parameterNames, resultsMinMax);
       if (normConclusion) {
         return normConclusion;
       }

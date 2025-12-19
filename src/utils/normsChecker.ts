@@ -207,7 +207,8 @@ export const getAllParameterChecks = (
 export const generateConclusionFromNorms = (
   checks: Record<string, NormCheckResult>,
   parameters?: Record<string, number>,
-  parameterNames?: Record<string, string>
+  parameterNames?: Record<string, string>,
+  resultsMinMax?: Record<string, { min?: number; max?: number }>
 ): string => {
   const conclusions: string[] = [];
   const abnormalConclusions: string[] = [];
@@ -237,7 +238,18 @@ export const generateConclusionFromNorms = (
       if (value !== undefined && !isNaN(value) && value !== 0) {
         const result = checks[paramName];
         const name = parameterNames[paramName] || paramName;
-        const formattedValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        
+        // Если есть мин/макс значения для этого параметра, показываем их
+        const minMaxData = resultsMinMax?.[paramName];
+        let formattedValue: string;
+        
+        if (minMaxData && (minMaxData.min !== undefined || minMaxData.max !== undefined)) {
+          const minStr = minMaxData.min !== undefined ? minMaxData.min.toString() : '?';
+          const maxStr = minMaxData.max !== undefined ? minMaxData.max.toString() : '?';
+          formattedValue = `${minStr}-${maxStr}`;
+        } else {
+          formattedValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        }
         
         if (result && result.normRange) {
           const minStr = Number.isInteger(result.normRange.min) ? result.normRange.min.toString() : result.normRange.min.toFixed(1);
