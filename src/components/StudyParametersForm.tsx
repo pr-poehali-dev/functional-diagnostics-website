@@ -27,6 +27,7 @@ const StudyParametersForm = ({
   const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
 
   const handleMinMaxChange = (paramId: string, field: 'min' | 'max', value: string) => {
+    console.log('📝 handleMinMaxChange:', { paramId, field, value });
     const minKey = `${paramId}_min`;
     const maxKey = `${paramId}_max`;
     const manualKey = `${paramId}_manual`;
@@ -38,6 +39,7 @@ const StudyParametersForm = ({
     
     // Не пересчитываем среднее, если оно было введено вручную
     if (parameters[manualKey] === 'true') {
+      console.log('⚠️ Ручной режим, не пересчитываем');
       return;
     }
     
@@ -46,12 +48,16 @@ const StudyParametersForm = ({
     
     if (!isNaN(minVal) && !isNaN(maxVal)) {
       const avg = ((minVal + maxVal) / 2).toFixed(1);
+      console.log('✅ Рассчитано среднее:', avg);
       onParameterChange(paramId, avg);
     } else if (!isNaN(minVal) && isNaN(maxVal)) {
+      console.log('✅ Только min:', minVal);
       onParameterChange(paramId, minVal.toString());
     } else if (isNaN(minVal) && !isNaN(maxVal)) {
+      console.log('✅ Только max:', maxVal);
       onParameterChange(paramId, maxVal.toString());
     } else {
+      console.log('⚠️ Очистка значения');
       onParameterChange(paramId, '');
     }
   };
