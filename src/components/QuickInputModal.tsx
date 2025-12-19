@@ -78,14 +78,17 @@ const QuickInputModal = ({
     });
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, currentIndex: number, totalFields: number) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, fieldId: string) => {
     if (e.key === 'Enter' || e.key === 'Tab' || e.key === ' ') {
       e.preventDefault();
       
+      const allKeys = Object.keys(inputRefs.current);
+      const currentIndex = allKeys.indexOf(fieldId);
       const nextIndex = currentIndex + 1;
-      if (nextIndex < totalFields) {
-        const allInputs = Object.values(inputRefs.current).filter(Boolean);
-        allInputs[nextIndex]?.focus();
+      
+      if (nextIndex < allKeys.length) {
+        const nextKey = allKeys[nextIndex];
+        inputRefs.current[nextKey]?.focus();
       } else {
         handleSave();
       }
@@ -118,62 +121,37 @@ const QuickInputModal = ({
           <div className="grid gap-4">
             {orderedParameters.map((param) => {
               const hasMinMax = parametersWithMinMax.includes(param.id);
-              const isManual = localValues[`${param.id}_manual`] === 'true';
               
               if (hasMinMax) {
-                const fieldIndex = Object.keys(inputRefs.current).length;
                 return (
                   <div key={param.id} className="space-y-2">
                     <Label className="font-medium">{param.name}</Label>
-                    <div className="flex gap-2 items-center flex-wrap">
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          ref={(el) => (inputRefs.current[`${param.id}_min`] = el)}
-                          type="number"
-                          placeholder="Мин"
-                          value={localValues[`${param.id}_min`] || ''}
-                          onChange={(e) => handleMinMaxChange(param.id, 'min', e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, fieldIndex, orderedParameters.length * 3)}
-                          className="w-20"
-                        />
-                        <span className="text-sm text-muted-foreground">-</span>
-                        <Input
-                          ref={(el) => (inputRefs.current[`${param.id}_max`] = el)}
-                          type="number"
-                          placeholder="Макс"
-                          value={localValues[`${param.id}_max`] || ''}
-                          onChange={(e) => handleMinMaxChange(param.id, 'max', e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, fieldIndex + 1, orderedParameters.length * 3)}
-                          className="w-20"
-                        />
-                      </div>
-                      <div className="flex gap-2 items-center">
-                        <span className="text-sm font-medium text-muted-foreground">Среднее:</span>
-                        <Input
-                          ref={(el) => (inputRefs.current[param.id] = el)}
-                          type="number"
-                          placeholder={isManual ? "Вручную" : "Авто"}
-                          value={localValues[param.id] || ''}
-                          onChange={(e) => {
-                            setLocalValues((prev) => ({
-                              ...prev,
-                              [param.id]: e.target.value,
-                              [`${param.id}_manual`]: 'true'
-                            }));
-                          }}
-                          onKeyDown={(e) => handleKeyDown(e, fieldIndex + 2, orderedParameters.length * 3)}
-                          className={`w-24 ${
-                            isManual ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-300' : ''
-                          }`}
-                        />
-                        <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
-                      </div>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        ref={(el) => (inputRefs.current[`${param.id}_min`] = el)}
+                        type="number"
+                        placeholder="Мин"
+                        value={localValues[`${param.id}_min`] || ''}
+                        onChange={(e) => handleMinMaxChange(param.id, 'min', e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, `${param.id}_min`)}
+                        className="w-24"
+                      />
+                      <span className="text-sm text-muted-foreground">-</span>
+                      <Input
+                        ref={(el) => (inputRefs.current[`${param.id}_max`] = el)}
+                        type="number"
+                        placeholder="Макс"
+                        value={localValues[`${param.id}_max`] || ''}
+                        onChange={(e) => handleMinMaxChange(param.id, 'max', e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, `${param.id}_max`)}
+                        className="w-24"
+                      />
+                      <span className="text-sm text-muted-foreground min-w-[60px]">{param.unit}</span>
                     </div>
                   </div>
                 );
               }
               
-              const fieldIndex = Object.keys(inputRefs.current).length;
               return (
                 <div key={param.id} className="grid grid-cols-[200px_1fr_100px] gap-4 items-center">
                   <Label htmlFor={`quick-${param.id}`} className="text-right font-medium">
@@ -189,7 +167,7 @@ const QuickInputModal = ({
                     onChange={(e) =>
                       setLocalValues({ ...localValues, [param.id]: e.target.value })
                     }
-                    onKeyDown={(e) => handleKeyDown(e, fieldIndex, orderedParameters.length)}
+                    onKeyDown={(e) => handleKeyDown(e, param.id)}
                     className="text-lg"
                   />
                   <span className="text-sm text-muted-foreground">{param.unit}</span>
