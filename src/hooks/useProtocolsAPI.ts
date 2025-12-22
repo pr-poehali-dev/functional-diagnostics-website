@@ -29,7 +29,9 @@ export const useProtocolsAPI = (authToken: string | null) => {
       }
 
       const url = `${API_URL}${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: authToken ? { 'X-Auth-Token': authToken } : {},
+      });
       
       if (!response.ok) {
         throw new Error('Ошибка загрузки протоколов');

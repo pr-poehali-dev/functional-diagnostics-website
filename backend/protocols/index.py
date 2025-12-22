@@ -44,6 +44,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cur = conn.cursor()
         
         if method == 'GET':
+            if not auth_token:
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Требуется авторизация'}),
+                    'isBase64Encoded': False
+                }
+            
+            cur.execute(
+                "SELECT id FROM t_p13795046_functional_diagnosti.doctors WHERE email = %s",
+                (auth_token,)
+            )
+            doctor_row = cur.fetchone()
+            if not doctor_row:
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Неверный токен'}),
+                    'isBase64Encoded': False
+                }
+            
+            doctor_id = doctor_row[0]
             protocol_id = event.get('queryStringParameters', {}).get('id')
             
             if protocol_id:
@@ -53,8 +75,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                            patient_bsa, ultrasound_device, study_date, results, results_min_max,
                            conclusion, signed, created_at 
                     FROM t_p13795046_functional_diagnosti.protocols 
-                    WHERE id = %s
-                """, (protocol_id,))
+                    WHERE id = %s AND doctor_id = %s
+                """, (protocol_id, doctor_id))
                 
                 row = cur.fetchone()
                 if not row:
@@ -82,8 +104,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 sort_by = query_params.get('sort_by', 'created_at')
                 sort_order = query_params.get('sort_order', 'desc')
                 
-                where_clauses = []
-                params = []
+                where_clauses = ['doctor_id = %s']
+                params = [doctor_id]
                 
                 if search_name:
                     where_clauses.append("LOWER(patient_name) LIKE LOWER(%s)")
@@ -101,9 +123,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     where_clauses.append("study_date <= %s")
                     params.append(date_to)
                 
-                where_sql = ""
-                if where_clauses:
-                    where_sql = "WHERE " + " AND ".join(where_clauses)
+                where_sql = "WHERE " + " AND ".join(where_clauses)
                 
                 allowed_sort = ['created_at', 'study_date', 'patient_name', 'study_type']
                 if sort_by not in allowed_sort:

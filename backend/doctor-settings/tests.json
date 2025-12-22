@@ -1,25 +1,19 @@
 {
   "tests": [
     {
-      "name": "Get doctor norms",
+      "name": "Get norms without auth",
       "method": "GET",
       "path": "/?doctor_id=1&type=norms&study_type=ecg",
-      "headers": {
-        "x-auth-token": "test-token"
-      },
-      "expectedStatus": 200,
+      "expectedStatus": 401,
       "expectedBody": {
-        "norms": "array"
+        "error": "string"
       },
       "bodyMatcher": "partial"
     },
     {
-      "name": "Save norm",
+      "name": "Save norm without auth",
       "method": "POST",
       "path": "/",
-      "headers": {
-        "x-auth-token": "test-token"
-      },
       "body": {
         "action": "save_norm",
         "doctor_id": 1,
@@ -30,10 +24,9 @@
         "min_value": 60,
         "max_value": 90
       },
-      "expectedStatus": 200,
+      "expectedStatus": 401,
       "expectedBody": {
-        "message": "string",
-        "id": "number"
+        "error": "string"
       },
       "bodyMatcher": "partial"
     }

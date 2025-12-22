@@ -31,7 +31,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         'Content-Type': 'application/json'
     }
     
-    auth_token = event.get('headers', {}).get('x-auth-token')
+    headers_dict = event.get('headers', {})
+    auth_token = headers_dict.get('x-auth-token') or headers_dict.get('X-Auth-Token')
+    
     if not auth_token:
         return {
             'statusCode': 401,
@@ -44,16 +46,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         conn = get_db_connection()
         cur = conn.cursor()
         
+        cur.execute(
+            "SELECT id FROM t_p13795046_functional_diagnosti.doctors WHERE email = %s",
+            (auth_token,)
+        )
+        doctor_row = cur.fetchone()
+        if not doctor_row:
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Неверный токен'}),
+                'isBase64Encoded': False
+            }
+        
+        authenticated_doctor_id = doctor_row['id']
+        
         if method == 'GET':
             params = event.get('queryStringParameters', {})
-            doctor_id = params.get('doctor_id')
+            doctor_id = params.get('doctor_id', str(authenticated_doctor_id))
             data_type = params.get('type')
             
-            if not doctor_id:
+            if int(doctor_id) != authenticated_doctor_id:
                 return {
-                    'statusCode': 400,
+                    'statusCode': 403,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Не указан ID врача'}),
+                    'body': json.dumps({'error': 'Доступ запрещен'}),
                     'isBase64Encoded': False
                 }
             
@@ -61,11 +78,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 study_type = params.get('study_type')
                 if study_type:
                     cur.execute(
-                        "SELECT * FROM doctor_norms WHERE doctor_id = %s AND study_type = %s ORDER BY parameter_id",
+                        "SELECT * FROM t_p13795046_functional_diagnosti.doctor_norms WHERE doctor_id = %s AND study_type = %s ORDER BY parameter_id",
                         (doctor_id, study_type)
                     )
                 else:
-                    cur.execute("SELECT * FROM doctor_norms WHERE doctor_id = %s ORDER BY study_type, parameter_id", (doctor_id,))
+                    cur.execute("SELECT * FROM t_p13795046_functional_diagnosti.doctor_norms WHERE doctor_id = %s ORDER BY study_type, parameter_id", (doctor_id,))
                 
                 norms = [dict(row) for row in cur.fetchall()]
                 for norm in norms:
@@ -83,11 +100,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 study_type = params.get('study_type')
                 if study_type:
                     cur.execute(
-                        "SELECT * FROM conclusion_templates WHERE doctor_id = %s AND study_type = %s ORDER BY priority DESC",
+                        "SELECT * FROM t_p13795046_functional_diagnosti.conclusion_templates WHERE doctor_id = %s AND study_type = %s ORDER BY priority DESC",
                         (doctor_id, study_type)
                     )
                 else:
-                    cur.execute("SELECT * FROM conclusion_templates WHERE doctor_id = %s ORDER BY study_type, priority DESC", (doctor_id,))
+                    cur.execute("SELECT * FROM t_p13795046_functional_diagnosti.conclusion_templates WHERE doctor_id = %s ORDER BY study_type, priority DESC", (doctor_id,))
                 
                 templates = [dict(row) for row in cur.fetchall()]
                 for template in templates:
@@ -114,7 +131,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cur.execute(
-                    "SELECT * FROM input_settings WHERE doctor_id = %s AND study_type = %s",
+                    "SELECT * FROM t_p13795046_functional_diagnosti.input_settings WHERE doctor_id = %s AND study_type = %s",
                     (doctor_id, study_type)
                 )
                 settings = cur.fetchone()
@@ -136,13 +153,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
             action = body_data.get('action')
-            doctor_id = body_data.get('doctor_id')
+            doctor_id = body_data.get('doctor_id', authenticated_doctor_id)
             
-            if not doctor_id:
+            if int(doctor_id) != authenticated_doctor_id:
                 return {
-                    'statusCode': 400,
+                    'statusCode': 403,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Не указан ID врача'}),
+                    'body': json.dumps({'error': 'Доступ запрещен'}),
                     'isBase64Encoded': False
                 }
             
@@ -156,7 +173,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(
                     """
-                    INSERT INTO doctor_norms (doctor_id, study_type, parameter_id, condition_type, condition_value, min_value, max_value)
+                    INSERT INTO t_p13795046_functional_diagnosti.doctor_norms (doctor_id, study_type, parameter_id, condition_type, condition_value, min_value, max_value)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (doctor_id, study_type, parameter_id, condition_type, condition_value)
                     DO UPDATE SET min_value = EXCLUDED.min_value, max_value = EXCLUDED.max_value
@@ -183,7 +200,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(
                     """
-                    INSERT INTO conclusion_templates (doctor_id, study_type, template_name, priority, conditions, conclusion_text)
+                    INSERT INTO t_p13795046_functional_diagnosti.conclusion_templates (doctor_id, study_type, template_name, priority, conditions, conclusion_text)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     RETURNING id
                     """,
@@ -206,7 +223,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(
                     """
-                    INSERT INTO input_settings (doctor_id, study_type, field_order, enabled_fields)
+                    INSERT INTO t_p13795046_functional_diagnosti.input_settings (doctor_id, study_type, field_order, enabled_fields)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (doctor_id, study_type)
                     DO UPDATE SET field_order = EXCLUDED.field_order, enabled_fields = EXCLUDED.enabled_fields, updated_at = CURRENT_TIMESTAMP
@@ -245,15 +262,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(
                     """
-                    UPDATE conclusion_templates
+                    UPDATE t_p13795046_functional_diagnosti.conclusion_templates
                     SET template_name = COALESCE(%s, template_name),
                         priority = COALESCE(%s, priority),
                         conditions = COALESCE(%s, conditions),
                         conclusion_text = COALESCE(%s, conclusion_text),
                         updated_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
+                    WHERE id = %s AND doctor_id = %s
                     """,
-                    (template_name, priority, json.dumps(conditions) if conditions else None, conclusion_text, item_id)
+                    (template_name, priority, json.dumps(conditions) if conditions else None, conclusion_text, item_id, authenticated_doctor_id)
                 )
                 conn.commit()
                 
@@ -278,9 +295,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             if data_type == 'norm':
-                cur.execute("DELETE FROM doctor_norms WHERE id = %s", (item_id,))
+                cur.execute("DELETE FROM t_p13795046_functional_diagnosti.doctor_norms WHERE id = %s AND doctor_id = %s", (item_id, authenticated_doctor_id))
             elif data_type == 'template':
-                cur.execute("DELETE FROM conclusion_templates WHERE id = %s", (item_id,))
+                cur.execute("DELETE FROM t_p13795046_functional_diagnosti.conclusion_templates WHERE id = %s AND doctor_id = %s", (item_id, authenticated_doctor_id))
             
             conn.commit()
             

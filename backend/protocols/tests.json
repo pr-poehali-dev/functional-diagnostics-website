@@ -1,10 +1,14 @@
 {
   "tests": [
     {
-      "name": "Get all protocols",
+      "name": "Get protocols without auth",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     },
     {
       "name": "Create protocol without auth",
