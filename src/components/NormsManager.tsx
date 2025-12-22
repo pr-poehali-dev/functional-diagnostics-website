@@ -84,14 +84,28 @@ export const NormsManager = () => {
                 Выберите тип исследования для управления нормативными таблицами
               </CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleResetToDefaults}
-            >
-              <Icon name="RotateCcw" size={16} className="mr-2" />
-              Сбросить к начальным
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={async () => {
+                  await loadNormTables();
+                  toast.success('Настройки обновлены с сервера');
+                }}
+                disabled={isLoading}
+              >
+                <Icon name="RefreshCw" size={16} className="mr-2" />
+                Обновить
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleResetToDefaults}
+              >
+                <Icon name="RotateCcw" size={16} className="mr-2" />
+                Сбросить к начальным
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
