@@ -67,7 +67,6 @@ export const useProtocolExporter = ({ doctor, getParameterStatus, normTables = [
       return;
     }
 
-    const clinicSettings = getClinicSettings();
     const study = studyTypes.find(s => s.name === protocol.studyType);
     
     const parametersHTML = generateParametersHTML({
