@@ -103,8 +103,6 @@ export const useNormTables = () => {
         const migrated = localStorage.getItem(STORAGE_KEY);
         if (!migrated) {
           const seedTables = generateNormsSeed();
-          let successCount = 0;
-          
           for (const table of seedTables) {
             try {
               const response = await fetch(API_URL, {
@@ -119,31 +117,23 @@ export const useNormTables = () => {
                   table: table,
                 }),
               });
-              if (response.ok) {
-                successCount++;
-              } else {
-                const errorText = await response.text();
-                console.error('Failed to migrate table:', table.parameter, errorText);
+              if (!response.ok) {
+                console.error('Failed to migrate table:', table.parameter);
               }
             } catch (error) {
               console.error('Failed to migrate table:', error);
             }
           }
+          localStorage.setItem(STORAGE_KEY, 'true');
           
-          if (successCount > 0) {
-            localStorage.setItem(STORAGE_KEY, 'true');
-            
-            const reloadResponse = await fetch(`${API_URL}?type=norm_tables&doctor_id=${doctor.id}`, {
-              headers: {
-                'X-Auth-Token': doctor.email,
-              },
-            });
-            if (reloadResponse.ok) {
-              const reloadData = await reloadResponse.json();
-              setNormTables(reloadData.norm_tables.map(convertFromApi));
-            }
-          } else {
-            toast.error('Не удалось создать таблицы норм. Попробуйте позже.');
+          const reloadResponse = await fetch(`${API_URL}?type=norm_tables&doctor_id=${doctor.id}`, {
+            headers: {
+              'X-Auth-Token': doctor.email,
+            },
+          });
+          if (reloadResponse.ok) {
+            const reloadData = await reloadResponse.json();
+            setNormTables(reloadData.norm_tables.map(convertFromApi));
           }
           return;
         }

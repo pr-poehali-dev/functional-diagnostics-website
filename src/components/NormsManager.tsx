@@ -52,13 +52,9 @@ export const NormsManager = () => {
   };
 
   const handleResetToDefaults = async () => {
-    if (!confirm('Это удалит все ваши таблицы норм и создаст начальные заново. Продолжить?')) {
-      return;
-    }
     localStorage.removeItem('norms_tables_migrated');
     await loadNormTables();
-    toast.success('Таблицы норм сброшены. Перезагрузка...');
-    setTimeout(() => window.location.reload(), 1000);
+    toast.success('Таблицы норм сброшены до начальных значений');
   };
 
 
