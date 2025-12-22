@@ -154,6 +154,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'settings': settings}),
                     'isBase64Encoded': False
                 }
+            
+            elif data_type == 'clinic_settings':
+                cur.execute(
+                    "SELECT * FROM t_p13795046_functional_diagnosti.clinic_settings WHERE doctor_id = %s",
+                    (doctor_id,)
+                )
+                settings = cur.fetchone()
+                
+                if settings:
+                    settings = dict(settings)
+                    if settings.get('created_at'):
+                        settings['created_at'] = settings['created_at'].isoformat()
+                    if settings.get('updated_at'):
+                        settings['updated_at'] = settings['updated_at'].isoformat()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'settings': settings}),
+                    'isBase64Encoded': False
+                }
         
         elif method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
@@ -168,7 +189,60 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            if action == 'save_norm_table':
+            if action == 'save_clinic_settings':
+                settings_data = body_data.get('settings')
+                if not settings_data:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Не указаны настройки клиники'}),
+                        'isBase64Encoded': False
+                    }
+                
+                clinic_name = settings_data.get('clinicName', '')
+                clinic_address = settings_data.get('clinicAddress', '')
+                clinic_phone = settings_data.get('clinicPhone', '')
+                logo_url = settings_data.get('logoUrl')
+                
+                cur.execute(
+                    "SELECT id FROM t_p13795046_functional_diagnosti.clinic_settings WHERE doctor_id = %s",
+                    (doctor_id,)
+                )
+                existing = cur.fetchone()
+                
+                if existing:
+                    cur.execute(
+                        """
+                        UPDATE t_p13795046_functional_diagnosti.clinic_settings
+                        SET clinic_name = %s, address = %s, phone = %s, logo_url = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE doctor_id = %s
+                        RETURNING id
+                        """,
+                        (clinic_name, clinic_address, clinic_phone, logo_url, doctor_id)
+                    )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO t_p13795046_functional_diagnosti.clinic_settings
+                        (doctor_id, clinic_name, address, phone, logo_url)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id
+                        """,
+                        (doctor_id, clinic_name, clinic_address, clinic_phone, logo_url)
+                    )
+                
+                result = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'id': result['id'], 'success': True}),
+                    'isBase64Encoded': False
+                }
+            
+            elif action == 'save_norm_table':
                 table_data = body_data.get('table')
                 if not table_data:
                     return {

@@ -10,6 +10,7 @@ import { SignProtocolDialog } from '@/components/SignProtocolDialog';
 import { useProtocolManager } from '@/hooks/useProtocolManager';
 import { useProtocolExporter } from '@/components/ProtocolExporter';
 import { useNormTables } from '@/hooks/useNormTables';
+import { useClinicSettings } from '@/hooks/useClinicSettings';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
   const [pendingProtocolId, setPendingProtocolId] = useState<string | null>(null);
 
   const { normTables } = useNormTables();
+  const { settings: clinicSettings } = useClinicSettings();
 
   const {
     selectedStudy,
@@ -55,6 +57,7 @@ const Index = () => {
     doctor,
     getParameterStatus,
     normTables,
+    clinicSettings,
   });
 
   const handleOpenFieldOrderSettings = () => {

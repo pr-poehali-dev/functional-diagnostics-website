@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 import { Protocol, studyTypes } from '@/types/medical';
-import { getClinicSettings } from './ClinicSettings';
+import { ClinicSettings } from '@/hooks/useClinicSettings';
 import { NormTable } from '@/types/norms';
 import { generateParametersHTML } from './protocol-exporter/generateParametersHTML';
 import { generateProtocolHTML } from './protocol-exporter/generateProtocolHTML';
@@ -18,17 +18,16 @@ type ProtocolExporterProps = {
   doctor: Doctor | null;
   getParameterStatus: (value: number, range: { min: number; max: number }) => 'success' | 'warning' | 'danger';
   normTables?: NormTable[];
+  clinicSettings: ClinicSettings;
 };
 
-export const useProtocolExporter = ({ doctor, getParameterStatus, normTables = [] }: ProtocolExporterProps) => {
+export const useProtocolExporter = ({ doctor, getParameterStatus, normTables = [], clinicSettings }: ProtocolExporterProps) => {
   const exportToPDF = (protocol: Protocol) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('Разрешите всплывающие окна для экспорта PDF');
       return;
     }
-
-    const clinicSettings = getClinicSettings();
     const study = studyTypes.find(s => s.name === protocol.studyType);
     
     const parametersHTML = generateParametersHTML({

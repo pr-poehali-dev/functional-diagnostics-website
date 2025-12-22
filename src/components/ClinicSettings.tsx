@@ -5,35 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-
-type ClinicSettings = {
-  clinicName: string;
-  clinicAddress: string;
-  clinicPhone: string;
-  logoUrl: string | null;
-};
-
-const STORAGE_KEY = 'clinic_settings';
+import { useClinicSettings } from '@/hooks/useClinicSettings';
 
 export const ClinicSettings = () => {
-  const [settings, setSettings] = useState<ClinicSettings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {
-      clinicName: '',
-      clinicAddress: '',
-      clinicPhone: '',
-      logoUrl: null
-    };
-  });
-
+  const { settings, isLoading, saveSettings, setSettings, loadSettings } = useClinicSettings();
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    toast.success('Настройки сохранены');
+  const handleSave = async () => {
+    setIsSaving(true);
+    const success = await saveSettings(settings);
+    if (success) {
+      toast.success('Настройки сохранены');
+    }
+    setIsSaving(false);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -50,13 +38,14 @@ export const ClinicSettings = () => {
     setUploading(true);
     const reader = new FileReader();
     
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const logoUrl = event.target?.result as string;
       const newSettings = { ...settings, logoUrl };
-      setSettings(newSettings);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+      const success = await saveSettings(newSettings);
       setUploading(false);
-      toast.success('Логотип загружен и сохранён');
+      if (success) {
+        toast.success('Логотип загружен и сохранён');
+      }
     };
 
     reader.onerror = () => {
@@ -67,23 +56,40 @@ export const ClinicSettings = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveLogo = () => {
+  const handleRemoveLogo = async () => {
     const newSettings = { ...settings, logoUrl: null };
-    setSettings(newSettings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
-    toast.success('Логотип удалён и изменения сохранены');
+    const success = await saveSettings(newSettings);
+    if (success) {
+      toast.success('Логотип удалён и изменения сохранены');
+    }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon name="Building2" size={24} />
-          Настройки клиники
-        </CardTitle>
-        <CardDescription>
-          Укажите данные вашей клиники для отображения в протоколах
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Icon name="Building2" size={24} />
+              Настройки клиники
+            </CardTitle>
+            <CardDescription>
+              Укажите данные вашей клиники для отображения в протоколах
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await loadSettings();
+              toast.success('Настройки обновлены с сервера');
+            }}
+            disabled={isLoading}
+          >
+            <Icon name="RefreshCw" size={16} className="mr-2" />
+            Обновить
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
@@ -157,21 +163,12 @@ export const ClinicSettings = () => {
           </div>
         </div>
 
-        <Button onClick={handleSave} className="w-full">
+        <Button onClick={handleSave} className="w-full" disabled={isSaving || isLoading}>
           <Icon name="Save" size={16} className="mr-2" />
-          Сохранить настройки
+          {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
         </Button>
       </CardContent>
     </Card>
   );
 };
 
-export const getClinicSettings = (): ClinicSettings => {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? JSON.parse(saved) : {
-    clinicName: '',
-    clinicAddress: '',
-    clinicPhone: '',
-    logoUrl: null
-  };
-};
