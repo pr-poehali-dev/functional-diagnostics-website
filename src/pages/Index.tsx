@@ -49,6 +49,7 @@ const Index = () => {
     handlePatientDataChange,
     handleParameterChange,
     handleQuickInputSave,
+    handleECGQuickInputSave,
     openQuickInput,
     getParameterStatus,
     generateConclusion,
@@ -145,6 +146,7 @@ const Index = () => {
           setEcgPositionType={setEcgPositionType}
           ecgPositions={ecgPositions}
           setEcgPositions={setEcgPositions}
+          onECGQuickInputSave={handleECGQuickInputSave}
         />
       </main>
 

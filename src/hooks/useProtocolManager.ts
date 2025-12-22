@@ -150,6 +150,11 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     toast.success('Данные сохранены');
   };
 
+  const handleECGQuickInputSave = (positions: ECGPositionData[]) => {
+    setEcgPositions(positions);
+    toast.success('Данные ЭКГ сохранены');
+  };
+
   const loadFieldOrder = (studyId: string): string[] => {
     const saved = localStorage.getItem(`field_order_${studyId}`);
     if (saved) {
@@ -337,6 +342,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     handlePatientDataChange,
     handleParameterChange,
     handleQuickInputSave,
+    handleECGQuickInputSave,
     openQuickInput,
     getParameterStatus,
     generateConclusion,

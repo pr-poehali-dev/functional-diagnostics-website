@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +11,7 @@ import { NormTable } from '@/types/norms';
 import PatientDataForm from '@/components/PatientDataForm';
 import StudyParametersForm from '@/components/StudyParametersForm';
 import ECGPositionForm from '@/components/ECGPositionForm';
+import ECGQuickInputModal from '@/components/ECGQuickInputModal';
 import ProtocolArchive from '@/components/ProtocolArchive';
 import DoctorSettings from '@/components/DoctorSettings';
 import { ClinicSettings } from '@/components/ClinicSettings';
@@ -45,6 +47,7 @@ type MainTabsProps = {
   setEcgPositionType: (type: ECGPositionType) => void;
   ecgPositions: ECGPositionData[];
   setEcgPositions: (positions: ECGPositionData[]) => void;
+  onECGQuickInputSave: (positions: ECGPositionData[]) => void;
 };
 
 const MainTabs = ({
@@ -77,7 +80,9 @@ const MainTabs = ({
   setEcgPositionType,
   ecgPositions,
   setEcgPositions,
+  onECGQuickInputSave,
 }: MainTabsProps) => {
+  const [isECGQuickInputOpen, setIsECGQuickInputOpen] = useState(false);
   
   const handleECGParameterChange = (positionIndex: number, parameterId: string, value: string) => {
     const newPositions = [...ecgPositions];
@@ -85,6 +90,7 @@ const MainTabs = ({
     setEcgPositions(newPositions);
   };
   return (
+    <>
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-5 mb-8">
         <TabsTrigger value="settings" className="gap-2">
@@ -223,7 +229,11 @@ const MainTabs = ({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={openQuickInput} className="w-full" variant="outline">
+                <Button 
+                  onClick={selectedStudy.id === 'ecg' ? () => setIsECGQuickInputOpen(true) : openQuickInput} 
+                  className="w-full" 
+                  variant="outline"
+                >
                   <Icon name="Keyboard" size={18} className="mr-2" />
                   Открыть окно быстрого ввода
                 </Button>
@@ -327,6 +337,19 @@ const MainTabs = ({
         />
       </TabsContent>
     </Tabs>
+    
+    {selectedStudy?.id === 'ecg' && (
+      <ECGQuickInputModal
+        isOpen={isECGQuickInputOpen}
+        onClose={() => setIsECGQuickInputOpen(false)}
+        positions={ecgPositions}
+        onSave={(positions) => {
+          onECGQuickInputSave(positions);
+          setIsECGQuickInputOpen(false);
+        }}
+      />
+    )}
+    </>
   );
 };
 
