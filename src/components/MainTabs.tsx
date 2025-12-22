@@ -5,10 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import { StudyType, PatientData, Protocol, studyTypes } from '@/types/medical';
+import { StudyType, PatientData, Protocol, studyTypes, ECGPositionType, ECGPositionData } from '@/types/medical';
 import { NormTable } from '@/types/norms';
 import PatientDataForm from '@/components/PatientDataForm';
 import StudyParametersForm from '@/components/StudyParametersForm';
+import ECGPositionForm from '@/components/ECGPositionForm';
 import ProtocolArchive from '@/components/ProtocolArchive';
 import DoctorSettings from '@/components/DoctorSettings';
 import { ClinicSettings } from '@/components/ClinicSettings';
@@ -40,6 +41,10 @@ type MainTabsProps = {
   printProtocol: (protocol: Protocol) => void;
   onOpenFieldOrderSettings: () => void;
   normTables: NormTable[];
+  ecgPositionType: ECGPositionType;
+  setEcgPositionType: (type: ECGPositionType) => void;
+  ecgPositions: ECGPositionData[];
+  setEcgPositions: (positions: ECGPositionData[]) => void;
 };
 
 const MainTabs = ({
@@ -68,7 +73,17 @@ const MainTabs = ({
   printProtocol,
   onOpenFieldOrderSettings,
   normTables,
+  ecgPositionType,
+  setEcgPositionType,
+  ecgPositions,
+  setEcgPositions,
 }: MainTabsProps) => {
+  
+  const handleECGParameterChange = (positionIndex: number, parameterId: string, value: string) => {
+    const newPositions = [...ecgPositions];
+    newPositions[positionIndex].results[parameterId] = parseFloat(value) || 0;
+    setEcgPositions(newPositions);
+  };
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-5 mb-8">
@@ -215,14 +230,24 @@ const MainTabs = ({
               </CardContent>
             </Card>
 
-            <StudyParametersForm
-              selectedStudy={selectedStudy}
-              parameters={parameters}
-              onParameterChange={handleParameterChange}
-              getParameterStatus={getParameterStatus}
-              patientData={patientData}
-              normTables={normTables}
-            />
+            {selectedStudy.id === 'ecg' ? (
+              <ECGPositionForm
+                positionType={ecgPositionType}
+                onPositionTypeChange={setEcgPositionType}
+                positions={ecgPositions}
+                onPositionsChange={setEcgPositions}
+                onParameterChange={handleECGParameterChange}
+              />
+            ) : (
+              <StudyParametersForm
+                selectedStudy={selectedStudy}
+                parameters={parameters}
+                onParameterChange={handleParameterChange}
+                getParameterStatus={getParameterStatus}
+                patientData={patientData}
+                normTables={normTables}
+              />
+            )}
 
             {Object.keys(parameters).length > 0 && (
               <Card className="bg-primary/5 border-primary/20">

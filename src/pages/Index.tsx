@@ -42,6 +42,10 @@ const Index = () => {
     setIsQuickInputOpen,
     fieldOrder,
     setFieldOrder,
+    ecgPositionType,
+    setEcgPositionType,
+    ecgPositions,
+    setEcgPositions,
     handlePatientDataChange,
     handleParameterChange,
     handleQuickInputSave,
@@ -137,6 +141,10 @@ const Index = () => {
           printProtocol={printProtocol}
           onOpenFieldOrderSettings={handleOpenFieldOrderSettings}
           normTables={normTables}
+          ecgPositionType={ecgPositionType}
+          setEcgPositionType={setEcgPositionType}
+          ecgPositions={ecgPositions}
+          setEcgPositions={setEcgPositions}
         />
       </main>
 

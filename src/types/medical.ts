@@ -31,6 +31,45 @@ export type PatientData = {
   studyDate: string;
 };
 
+export type ECGPositionType = 
+  | 'lying' 
+  | 'lying_inhale' 
+  | 'lying_standing' 
+  | 'lying_standing_exercise'
+  | 'custom';
+
+export type ECGRhythm = 
+  | 'sinus'
+  | 'migration'
+  | 'atrial'
+  | 'av_nodal'
+  | 'atrial_fibrillation'
+  | 'idioventricular'
+  | 'supraventricular_tachycardia'
+  | 'av_nodal_tachycardia'
+  | 'ventricular_tachycardia'
+  | 'custom';
+
+export type ECGAxis = 
+  | 'normal'
+  | 'vertical'
+  | 'horizontal'
+  | 'right'
+  | 'left'
+  | 'sharp_right'
+  | 'sharp_left'
+  | 's_type'
+  | 'custom';
+
+export type ECGPositionData = {
+  position: 'lying' | 'inhale' | 'standing' | 'exercise';
+  rhythm: ECGRhythm;
+  rhythmCustom?: string;
+  axis: ECGAxis;
+  axisCustom?: string;
+  results: Record<string, number>;
+};
+
 export type Protocol = {
   id: string;
   studyType: string;
@@ -41,7 +80,49 @@ export type Protocol = {
   resultsMinMax?: Record<string, { min?: number; max?: number }>;
   conclusion: string;
   signed?: boolean;
+  ecgPositionType?: ECGPositionType;
+  ecgPositions?: ECGPositionData[];
 };
+
+export const ECG_POSITION_TYPES = {
+  lying: 'Лежа',
+  lying_inhale: 'Лежа + на вдохе',
+  lying_standing: 'Лежа + Стоя',
+  lying_standing_exercise: 'Лежа + Стоя + физ. нагрузка',
+  custom: 'Дополнительные позиции',
+} as const;
+
+export const ECG_RHYTHMS = {
+  sinus: 'синусовый',
+  migration: 'миграция водителя ритма',
+  atrial: 'предсердный',
+  av_nodal: 'АВ узловой',
+  atrial_fibrillation: 'фибрилляция предсердий',
+  idioventricular: 'идиовентрикулярный',
+  supraventricular_tachycardia: 'наджелудочковая тахикардия',
+  av_nodal_tachycardia: 'АВ узловая тахикардия',
+  ventricular_tachycardia: 'желудочковая тахикардия',
+  custom: 'Другое (ввести вручную)',
+} as const;
+
+export const ECG_AXIS = {
+  normal: 'нормальное положение',
+  vertical: 'вертикальное положение',
+  horizontal: 'горизонтальное положение',
+  right: 'отклонена вправо',
+  left: 'отклонена влево',
+  sharp_right: 'резко отклонена вправо',
+  sharp_left: 'резко отклонена влево',
+  s_type: 'S тип',
+  custom: 'Другое (ввести вручную)',
+} as const;
+
+export const ECG_POSITION_LABELS = {
+  lying: 'Лежа',
+  inhale: 'На вдохе',
+  standing: 'Стоя',
+  exercise: 'После физ. нагрузки',
+} as const;
 
 export const studyTypes: StudyType[] = [
   {

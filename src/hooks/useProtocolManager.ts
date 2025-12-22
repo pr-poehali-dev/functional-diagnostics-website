@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { StudyType, PatientData, PatientAge, Protocol } from '@/types/medical';
+import { StudyType, PatientData, PatientAge, Protocol, ECGPositionType, ECGPositionData } from '@/types/medical';
 import { useProtocolsAPI } from './useProtocolsAPI';
 import { getAllParameterChecks, generateConclusionFromNorms } from '@/utils/normsChecker';
+import { generateECGConclusion } from '@/utils/ecgConclusionGenerator';
 import { NormTable } from '@/types/norms';
 
 export const useProtocolManager = (authToken: string | null, normTables: NormTable[] = []) => {
@@ -21,6 +22,13 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   const [activeTab, setActiveTab] = useState('home');
   const [isQuickInputOpen, setIsQuickInputOpen] = useState(false);
   const [fieldOrder, setFieldOrder] = useState<string[]>([]);
+  const [ecgPositionType, setEcgPositionType] = useState<ECGPositionType>('lying');
+  const [ecgPositions, setEcgPositions] = useState<ECGPositionData[]>([{
+    position: 'lying',
+    rhythm: 'sinus',
+    axis: 'normal',
+    results: {},
+  }]);
 
   const {
     protocols,
@@ -34,14 +42,31 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
 
   // Автоматически обновляем заключение при изменении параметров
   useEffect(() => {
+    if (!selectedStudy) return;
+    
+    // Для ЭКГ проверяем данные позиций
+    if (selectedStudy.id === 'ecg') {
+      const hasECGData = ecgPositions.some(pos => 
+        Object.values(pos.results).some(v => v !== 0)
+      );
+      if (hasECGData) {
+        const newConclusion = generateConclusion();
+        if (newConclusion !== conclusion) {
+          setConclusion(newConclusion);
+        }
+      }
+      return;
+    }
+    
+    // Для других типов исследований используем обычную логику
     const hasData = Object.values(parameters).some(v => v !== '');
-    if (hasData && selectedStudy) {
+    if (hasData) {
       const newConclusion = generateConclusion();
       if (newConclusion !== conclusion) {
         setConclusion(newConclusion);
       }
     }
-  }, [parameters, patientData, selectedStudy, normTables]);
+  }, [parameters, patientData, selectedStudy, normTables, ecgPositions]);
 
   const calculateAgeFromDate = (birthDate: string, referenceDate: string = new Date().toISOString()): PatientAge => {
     if (!birthDate) {
@@ -156,6 +181,11 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
 
   const generateConclusion = () => {
     if (!selectedStudy) return '';
+    
+    // Для ЭКГ используем специальную логику с позициями
+    if (selectedStudy.id === 'ecg') {
+      return generateECGConclusion(ecgPositions);
+    }
     
     const numericParams: Record<string, number> = {};
     const resultsMinMax: Record<string, { min?: number; max?: number }> = {};
@@ -300,6 +330,10 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     setIsQuickInputOpen,
     fieldOrder,
     setFieldOrder,
+    ecgPositionType,
+    setEcgPositionType,
+    ecgPositions,
+    setEcgPositions,
     handlePatientDataChange,
     handleParameterChange,
     handleQuickInputSave,
