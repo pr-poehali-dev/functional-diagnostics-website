@@ -371,40 +371,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
-        elif method == 'DELETE':
-            params = event.get('queryStringParameters', {})
-            table_id = params.get('table_id')
-            
-            if not table_id:
-                return {
-                    'statusCode': 400,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Не указан ID таблицы норм'}),
-                    'isBase64Encoded': False
-                }
-            
-            cur.execute(
-                "DELETE FROM t_p13795046_functional_diagnosti.norm_tables WHERE id = %s::uuid AND doctor_id = %s RETURNING id",
-                (table_id, authenticated_doctor_id)
-            )
-            result = cur.fetchone()
-            if not result:
-                return {
-                    'statusCode': 404,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Таблица норм не найдена'}),
-                    'isBase64Encoded': False
-                }
-            
-            conn.commit()
-            
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({'message': 'Таблица норм удалена'}),
-                'isBase64Encoded': False
-            }
-        
         elif method == 'PUT':
             body_data = json.loads(event.get('body', '{}'))
             data_type = body_data.get('type')
@@ -447,28 +413,35 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'DELETE':
             params = event.get('queryStringParameters', {})
-            data_type = params.get('type')
-            item_id = params.get('id')
+            table_id = params.get('table_id')
             
-            if not item_id:
+            if not table_id:
                 return {
                     'statusCode': 400,
                     'headers': headers,
-                    'body': json.dumps({'error': 'Не указан ID записи'}),
+                    'body': json.dumps({'error': 'Не указан ID таблицы норм'}),
                     'isBase64Encoded': False
                 }
             
-            if data_type == 'norm':
-                cur.execute("DELETE FROM t_p13795046_functional_diagnosti.doctor_norms WHERE id = %s AND doctor_id = %s", (item_id, authenticated_doctor_id))
-            elif data_type == 'template':
-                cur.execute("DELETE FROM t_p13795046_functional_diagnosti.conclusion_templates WHERE id = %s AND doctor_id = %s", (item_id, authenticated_doctor_id))
+            cur.execute(
+                "DELETE FROM t_p13795046_functional_diagnosti.norm_tables WHERE id = %s::uuid AND doctor_id = %s RETURNING id",
+                (table_id, authenticated_doctor_id)
+            )
+            result = cur.fetchone()
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Таблица норм не найдена'}),
+                    'isBase64Encoded': False
+                }
             
             conn.commit()
             
             return {
                 'statusCode': 200,
                 'headers': headers,
-                'body': json.dumps({'message': 'Удалено успешно'}),
+                'body': json.dumps({'message': 'Таблица норм удалена'}),
                 'isBase64Encoded': False
             }
         
