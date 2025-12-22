@@ -103,9 +103,38 @@ export const useNormTables = () => {
         const migrated = localStorage.getItem(STORAGE_KEY);
         if (!migrated) {
           const seedTables = generateNormsSeed();
-          await Promise.all(seedTables.map(table => saveNormTable(table)));
+          for (const table of seedTables) {
+            try {
+              const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Auth-Token': doctor.email,
+                },
+                body: JSON.stringify({
+                  action: 'save_norm_table',
+                  doctor_id: doctor.id,
+                  table: table,
+                }),
+              });
+              if (!response.ok) {
+                console.error('Failed to migrate table:', table.parameter);
+              }
+            } catch (error) {
+              console.error('Failed to migrate table:', error);
+            }
+          }
           localStorage.setItem(STORAGE_KEY, 'true');
-          await loadNormTables();
+          
+          const reloadResponse = await fetch(`${API_URL}?type=norm_tables&doctor_id=${doctor.id}`, {
+            headers: {
+              'X-Auth-Token': doctor.email,
+            },
+          });
+          if (reloadResponse.ok) {
+            const reloadData = await reloadResponse.json();
+            setNormTables(reloadData.norm_tables.map(convertFromApi));
+          }
           return;
         }
       }
