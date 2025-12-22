@@ -428,6 +428,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'DELETE':
             params = event.get('queryStringParameters', {})
             table_id = params.get('table_id')
+            delete_all = params.get('delete_all')
+            
+            if delete_all == 'true':
+                cur.execute(
+                    "DELETE FROM t_p13795046_functional_diagnosti.norm_tables WHERE doctor_id = %s",
+                    (authenticated_doctor_id,)
+                )
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'message': 'Все таблицы норм удалены'}),
+                    'isBase64Encoded': False
+                }
             
             if not table_id:
                 return {

@@ -183,9 +183,32 @@ export const useNormTables = () => {
     }
   };
 
+  const deleteAllNormTables = async (): Promise<boolean> => {
+    if (!doctor) return false;
+
+    try {
+      const response = await fetch(`${API_URL}?delete_all=true`, {
+        method: 'DELETE',
+        headers: {
+          'X-Auth-Token': doctor.email,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete all norm tables');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to delete all norm tables:', error);
+      toast.error('Ошибка удаления таблиц норм');
+      return false;
+    }
+  };
+
   useEffect(() => {
     loadNormTables();
   }, [loadNormTables]);
 
-  return { normTables, isLoading, loadNormTables, saveNormTable, deleteNormTable };
+  return { normTables, isLoading, loadNormTables, saveNormTable, deleteNormTable, deleteAllNormTables };
 };

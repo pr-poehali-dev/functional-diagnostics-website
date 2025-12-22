@@ -12,7 +12,7 @@ import { useNormTables } from '@/hooks/useNormTables';
 
 export const NormsManager = () => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { normTables, isLoading, loadNormTables, saveNormTable, deleteNormTable } = useNormTables();
+  const { normTables, isLoading, loadNormTables, saveNormTable, deleteNormTable, deleteAllNormTables } = useNormTables();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<NormTable | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<PatientCategory | 'all'>('all');
@@ -55,9 +55,15 @@ export const NormsManager = () => {
     if (!confirm('Это удалит все ваши таблицы норм и создаст начальные заново. Продолжить?')) {
       return;
     }
+    
+    const deleted = await deleteAllNormTables();
+    if (!deleted) {
+      toast.error('Не удалось удалить таблицы норм');
+      return;
+    }
+    
     localStorage.removeItem('norms_tables_migrated');
-    await loadNormTables();
-    toast.success('Таблицы норм сброшены. Перезагрузка...');
+    toast.success('Таблицы норм удалены. Перезагрузка для создания начальных...');
     setTimeout(() => window.location.reload(), 1000);
   };
 
