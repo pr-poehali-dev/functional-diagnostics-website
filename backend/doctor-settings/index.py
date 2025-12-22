@@ -266,29 +266,43 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if table_id and table_id != 'new':
                     cur.execute(
-                        """
-                        UPDATE t_p13795046_functional_diagnosti.norm_tables
-                        SET study_type = %s, category = %s, parameter = %s, norm_type = %s,
-                            rows = %s::jsonb, show_in_report = %s,
-                            conclusion_below = %s, conclusion_above = %s,
-                            conclusion_borderline_low = %s, conclusion_borderline_high = %s,
-                            updated_at = CURRENT_TIMESTAMP
-                        WHERE id = %s::uuid AND doctor_id = %s
-                        RETURNING id
-                        """,
-                        (study_type, category, parameter, norm_type, rows, show_in_report,
-                         conclusion_below, conclusion_above, conclusion_borderline_low,
-                         conclusion_borderline_high, table_id, doctor_id)
+                        "SELECT id FROM t_p13795046_functional_diagnosti.norm_tables WHERE id = %s::uuid AND doctor_id = %s",
+                        (table_id, doctor_id)
                     )
-                    result = cur.fetchone()
-                    if not result:
-                        return {
-                            'statusCode': 404,
-                            'headers': headers,
-                            'body': json.dumps({'error': 'Таблица норм не найдена'}),
-                            'isBase64Encoded': False
-                        }
-                    saved_id = str(result['id'])
+                    existing = cur.fetchone()
+                    
+                    if existing:
+                        cur.execute(
+                            """
+                            UPDATE t_p13795046_functional_diagnosti.norm_tables
+                            SET study_type = %s, category = %s, parameter = %s, norm_type = %s,
+                                rows = %s::jsonb, show_in_report = %s,
+                                conclusion_below = %s, conclusion_above = %s,
+                                conclusion_borderline_low = %s, conclusion_borderline_high = %s,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = %s::uuid AND doctor_id = %s
+                            RETURNING id
+                            """,
+                            (study_type, category, parameter, norm_type, rows, show_in_report,
+                             conclusion_below, conclusion_above, conclusion_borderline_low,
+                             conclusion_borderline_high, table_id, doctor_id)
+                        )
+                        saved_id = str(cur.fetchone()['id'])
+                    else:
+                        cur.execute(
+                            """
+                            INSERT INTO t_p13795046_functional_diagnosti.norm_tables
+                            (doctor_id, study_type, category, parameter, norm_type, rows,
+                             show_in_report, conclusion_below, conclusion_above,
+                             conclusion_borderline_low, conclusion_borderline_high)
+                            VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s)
+                            RETURNING id
+                            """,
+                            (doctor_id, study_type, category, parameter, norm_type, rows,
+                             show_in_report, conclusion_below, conclusion_above,
+                             conclusion_borderline_low, conclusion_borderline_high)
+                        )
+                        saved_id = str(cur.fetchone()['id'])
                 else:
                     cur.execute(
                         """
