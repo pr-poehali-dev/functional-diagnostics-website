@@ -31,10 +31,10 @@ const ECGQuickInputModal = ({
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const parameters = [
-    { id: 'hr', name: 'ЧСС', unit: 'уд/мин' },
-    { id: 'pq', name: 'PQ интервал', unit: 'мс' },
-    { id: 'qrs', name: 'QRS комплекс', unit: 'мс' },
-    { id: 'qt', name: 'QT интервал', unit: 'мс' },
+    { id: 'hr', name: 'ЧСС', unit: 'уд/мин', hasMinMax: true },
+    { id: 'pq', name: 'PQ интервал', unit: 'мс', hasMinMax: true },
+    { id: 'qrs', name: 'QRS комплекс', unit: 'мс', hasMinMax: true },
+    { id: 'qt', name: 'QT интервал', unit: 'мс', hasMinMax: true },
   ];
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const ECGQuickInputModal = ({
 
   useEffect(() => {
     if (isOpen && parameters.length > 0) {
-      const firstFieldId = `0-${parameters[0].id}`;
+      const firstFieldId = `0-${parameters[0].id}-min`;
       setTimeout(() => {
         inputRefs.current[firstFieldId]?.focus();
       }, 100);
@@ -57,28 +57,42 @@ const ECGQuickInputModal = ({
     setLocalPositions(newPositions);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, positionIndex: number, paramId: string) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, positionIndex: number, paramId: string, field: 'min' | 'value' | 'max') => {
     if (e.key === 'Enter' || e.key === 'Tab' || e.key === ' ') {
       e.preventDefault();
       
       const currentParamIndex = parameters.findIndex(p => p.id === paramId);
-      const nextParamIndex = currentParamIndex + 1;
       
-      if (nextParamIndex < parameters.length) {
-        // Переход к следующему параметру в текущей позиции
-        const nextKey = `${positionIndex}-${parameters[nextParamIndex].id}`;
+      // Определяем следующее поле
+      let nextKey = '';
+      
+      if (field === 'min') {
+        nextKey = `${positionIndex}-${paramId}-value`;
+      } else if (field === 'value') {
+        nextKey = `${positionIndex}-${paramId}-max`;
+      } else if (field === 'max') {
+        const nextParamIndex = currentParamIndex + 1;
+        if (nextParamIndex < parameters.length) {
+          // Переход к мин следующего параметра
+          nextKey = `${positionIndex}-${parameters[nextParamIndex].id}-min`;
+        } else if (positionIndex + 1 < localPositions.length) {
+          // Переход к первой позиции
+          const nextPositionIndex = positionIndex + 1;
+          setActiveTab(nextPositionIndex.toString());
+          setTimeout(() => {
+            const nextKey = `${nextPositionIndex}-${parameters[0].id}-min`;
+            inputRefs.current[nextKey]?.focus();
+          }, 100);
+          return;
+        } else {
+          // Последнее поле - сохраняем
+          handleSave();
+          return;
+        }
+      }
+      
+      if (nextKey) {
         inputRefs.current[nextKey]?.focus();
-      } else if (positionIndex + 1 < localPositions.length) {
-        // Переход к первому параметру следующей позиции
-        const nextPositionIndex = positionIndex + 1;
-        setActiveTab(nextPositionIndex.toString());
-        setTimeout(() => {
-          const nextKey = `${nextPositionIndex}-${parameters[0].id}`;
-          inputRefs.current[nextKey]?.focus();
-        }, 100);
-      } else {
-        // Это последнее поле - сохраняем
-        handleSave();
       }
     }
   };
@@ -114,21 +128,42 @@ const ECGQuickInputModal = ({
             <TabsContent key={positionIndex} value={positionIndex.toString()} className="space-y-4 py-4">
               <div className="grid gap-4">
                 {parameters.map((param) => (
-                  <div key={param.id} className="grid grid-cols-[200px_1fr_100px] gap-4 items-center">
-                    <Label htmlFor={`quick-${positionIndex}-${param.id}`} className="text-right font-medium">
-                      {param.name}
-                    </Label>
-                    <Input
-                      id={`quick-${positionIndex}-${param.id}`}
-                      ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}`] = el)}
-                      type="number"
-                      step="0.1"
-                      value={position.results[param.id] || ''}
-                      onChange={(e) => handleValueChange(positionIndex, param.id, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id)}
-                      className="text-lg"
-                    />
-                    <span className="text-sm text-muted-foreground">{param.unit}</span>
+                  <div key={param.id} className="space-y-1">
+                    <Label className="font-medium">{param.name} ({param.unit})</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}-min`] = el)}
+                        type="number"
+                        step="0.1"
+                        placeholder="Мин"
+                        value={position.results[`${param.id}_min`] || ''}
+                        onChange={(e) => handleValueChange(positionIndex, `${param.id}_min`, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'min')}
+                        className="w-20 text-lg"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}-value`] = el)}
+                        type="number"
+                        step="0.1"
+                        placeholder="Значение"
+                        value={position.results[param.id] || ''}
+                        onChange={(e) => handleValueChange(positionIndex, param.id, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'value')}
+                        className="flex-1 text-lg"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}-max`] = el)}
+                        type="number"
+                        step="0.1"
+                        placeholder="Макс"
+                        value={position.results[`${param.id}_max`] || ''}
+                        onChange={(e) => handleValueChange(positionIndex, `${param.id}_max`, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'max')}
+                        className="w-20 text-lg"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

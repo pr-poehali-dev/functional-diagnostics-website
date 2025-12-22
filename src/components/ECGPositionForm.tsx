@@ -173,42 +173,133 @@ const ECGPositionForm = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {/* ЧСС */}
                 <div className="space-y-2">
                   <Label>ЧСС (уд/мин)</Label>
-                  <Input
-                    type="number"
-                    placeholder="60-90"
-                    value={position.results['hr'] || ''}
-                    onChange={(e) => onParameterChange(index, 'hr', e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Мин"
+                        value={position.results['hr_min'] || ''}
+                        onChange={(e) => onParameterChange(index, 'hr_min', e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="60-90"
+                        value={position.results['hr'] || ''}
+                        onChange={(e) => onParameterChange(index, 'hr', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="Макс"
+                        value={position.results['hr_max'] || ''}
+                        onChange={(e) => onParameterChange(index, 'hr_max', e.target.value)}
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* PQ */}
                 <div className="space-y-2">
                   <Label>PQ интервал (мс)</Label>
-                  <Input
-                    type="number"
-                    placeholder="120-200"
-                    value={position.results['pq'] || ''}
-                    onChange={(e) => onParameterChange(index, 'pq', e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Мин"
+                        value={position.results['pq_min'] || ''}
+                        onChange={(e) => onParameterChange(index, 'pq_min', e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="120-200"
+                        value={position.results['pq'] || ''}
+                        onChange={(e) => onParameterChange(index, 'pq', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="Макс"
+                        value={position.results['pq_max'] || ''}
+                        onChange={(e) => onParameterChange(index, 'pq_max', e.target.value)}
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* QRS */}
                 <div className="space-y-2">
                   <Label>QRS комплекс (мс)</Label>
-                  <Input
-                    type="number"
-                    placeholder="60-100"
-                    value={position.results['qrs'] || ''}
-                    onChange={(e) => onParameterChange(index, 'qrs', e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Мин"
+                        value={position.results['qrs_min'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qrs_min', e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="60-100"
+                        value={position.results['qrs'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qrs', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="Макс"
+                        value={position.results['qrs_max'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qrs_max', e.target.value)}
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* QT */}
                 <div className="space-y-2">
                   <Label>QT интервал (мс)</Label>
-                  <Input
-                    type="number"
-                    placeholder="340-440"
-                    value={position.results['qt'] || ''}
-                    onChange={(e) => onParameterChange(index, 'qt', e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Мин"
+                        value={position.results['qt_min'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qt_min', e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="340-440"
+                        value={position.results['qt'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qt', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-muted-foreground">—</span>
+                      <Input
+                        type="number"
+                        placeholder="Макс"
+                        value={position.results['qt_max'] || ''}
+                        onChange={(e) => onParameterChange(index, 'qt_max', e.target.value)}
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
