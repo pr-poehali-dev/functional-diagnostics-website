@@ -74,25 +74,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            if data_type == 'norms':
+            if data_type == 'norm_tables':
                 study_type = params.get('study_type')
                 if study_type:
                     cur.execute(
-                        "SELECT * FROM t_p13795046_functional_diagnosti.doctor_norms WHERE doctor_id = %s AND study_type = %s ORDER BY parameter_id",
+                        "SELECT * FROM t_p13795046_functional_diagnosti.norm_tables WHERE doctor_id = %s AND study_type = %s ORDER BY parameter",
                         (doctor_id, study_type)
                     )
                 else:
-                    cur.execute("SELECT * FROM t_p13795046_functional_diagnosti.doctor_norms WHERE doctor_id = %s ORDER BY study_type, parameter_id", (doctor_id,))
+                    cur.execute("SELECT * FROM t_p13795046_functional_diagnosti.norm_tables WHERE doctor_id = %s ORDER BY study_type, parameter", (doctor_id,))
                 
-                norms = [dict(row) for row in cur.fetchall()]
-                for norm in norms:
-                    if norm.get('created_at'):
-                        norm['created_at'] = norm['created_at'].isoformat()
+                norm_tables = []
+                for row in cur.fetchall():
+                    table = dict(row)
+                    table['id'] = str(table['id'])
+                    if table.get('created_at'):
+                        table['created_at'] = table['created_at'].isoformat()
+                    if table.get('updated_at'):
+                        table['updated_at'] = table['updated_at'].isoformat()
+                    norm_tables.append(table)
                 
                 return {
                     'statusCode': 200,
                     'headers': headers,
-                    'body': json.dumps({'norms': norms}),
+                    'body': json.dumps({'norm_tables': norm_tables}),
                     'isBase64Encoded': False
                 }
             
@@ -163,31 +168,75 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            if action == 'save_norm':
-                study_type = body_data.get('study_type')
-                parameter_id = body_data.get('parameter_id')
-                condition_type = body_data.get('condition_type', 'default')
-                condition_value = body_data.get('condition_value', 'all')
-                min_value = body_data.get('min_value')
-                max_value = body_data.get('max_value')
+            if action == 'save_norm_table':
+                table_data = body_data.get('table')
+                if not table_data:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Не указаны данные таблицы норм'}),
+                        'isBase64Encoded': False
+                    }
                 
-                cur.execute(
-                    """
-                    INSERT INTO t_p13795046_functional_diagnosti.doctor_norms (doctor_id, study_type, parameter_id, condition_type, condition_value, min_value, max_value)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (doctor_id, study_type, parameter_id, condition_type, condition_value)
-                    DO UPDATE SET min_value = EXCLUDED.min_value, max_value = EXCLUDED.max_value
-                    RETURNING id
-                    """,
-                    (doctor_id, study_type, parameter_id, condition_type, condition_value, min_value, max_value)
-                )
-                norm_id = cur.fetchone()['id']
+                table_id = table_data.get('id')
+                study_type = table_data.get('studyType')
+                category = table_data.get('category')
+                parameter = table_data.get('parameter')
+                norm_type = table_data.get('normType')
+                rows = json.dumps(table_data.get('rows', []))
+                show_in_report = table_data.get('showInReport', True)
+                conclusion_below = table_data.get('conclusionBelow')
+                conclusion_above = table_data.get('conclusionAbove')
+                conclusion_borderline_low = table_data.get('conclusionBorderlineLow')
+                conclusion_borderline_high = table_data.get('conclusionBorderlineHigh')
+                
+                if table_id and table_id != 'new':
+                    cur.execute(
+                        """
+                        UPDATE t_p13795046_functional_diagnosti.norm_tables
+                        SET study_type = %s, category = %s, parameter = %s, norm_type = %s,
+                            rows = %s::jsonb, show_in_report = %s,
+                            conclusion_below = %s, conclusion_above = %s,
+                            conclusion_borderline_low = %s, conclusion_borderline_high = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = %s::uuid AND doctor_id = %s
+                        RETURNING id
+                        """,
+                        (study_type, category, parameter, norm_type, rows, show_in_report,
+                         conclusion_below, conclusion_above, conclusion_borderline_low,
+                         conclusion_borderline_high, table_id, doctor_id)
+                    )
+                    result = cur.fetchone()
+                    if not result:
+                        return {
+                            'statusCode': 404,
+                            'headers': headers,
+                            'body': json.dumps({'error': 'Таблица норм не найдена'}),
+                            'isBase64Encoded': False
+                        }
+                    saved_id = str(result['id'])
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO t_p13795046_functional_diagnosti.norm_tables
+                        (doctor_id, study_type, category, parameter, norm_type, rows,
+                         show_in_report, conclusion_below, conclusion_above,
+                         conclusion_borderline_low, conclusion_borderline_high)
+                        VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s)
+                        RETURNING id
+                        """,
+                        (doctor_id, study_type, category, parameter, norm_type, rows,
+                         show_in_report, conclusion_below, conclusion_above,
+                         conclusion_borderline_low, conclusion_borderline_high)
+                    )
+                    saved_id = str(cur.fetchone()['id'])
+                
                 conn.commit()
                 
                 return {
                     'statusCode': 200,
                     'headers': headers,
-                    'body': json.dumps({'message': 'Норма сохранена', 'id': norm_id}),
+                    'body': json.dumps({'message': 'Таблица норм сохранена', 'id': saved_id}),
                     'isBase64Encoded': False
                 }
             
@@ -240,6 +289,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'message': 'Настройки ввода сохранены', 'id': settings_id}),
                     'isBase64Encoded': False
                 }
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters', {})
+            table_id = params.get('table_id')
+            
+            if not table_id:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Не указан ID таблицы норм'}),
+                    'isBase64Encoded': False
+                }
+            
+            cur.execute(
+                "DELETE FROM t_p13795046_functional_diagnosti.norm_tables WHERE id = %s::uuid AND doctor_id = %s RETURNING id",
+                (table_id, authenticated_doctor_id)
+            )
+            result = cur.fetchone()
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Таблица норм не найдена'}),
+                    'isBase64Encoded': False
+                }
+            
+            conn.commit()
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'Таблица норм удалена'}),
+                'isBase64Encoded': False
+            }
         
         elif method == 'PUT':
             body_data = json.loads(event.get('body', '{}'))

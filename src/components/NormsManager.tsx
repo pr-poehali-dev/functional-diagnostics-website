@@ -10,25 +10,12 @@ import { NormTableWizard } from './NormTableWizard';
 import { NormTableList } from './NormTableList';
 import { useNormTables } from '@/hooks/useNormTables';
 
-const STORAGE_KEY = 'norms_tables';
-
 export const NormsManager = () => {
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { normTables: loadedNormTables, loadNormTables: reloadNormTables } = useNormTables();
-  const [normTables, setNormTables] = useState<NormTable[]>([]);
+  const { normTables, isLoading, loadNormTables, saveNormTable, deleteNormTable } = useNormTables();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<NormTable | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<PatientCategory | 'all'>('all');
-
-  useEffect(() => {
-    setNormTables(loadedNormTables);
-  }, [loadedNormTables]);
-
-  const saveNormTables = (tables: NormTable[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tables));
-    setNormTables(tables);
-    reloadNormTables();
-  };
 
   const handleCreateTable = () => {
     if (!selectedStudy) {
@@ -44,28 +31,29 @@ export const NormsManager = () => {
     setIsEditorOpen(true);
   };
 
-  const handleSaveTable = (table: NormTable) => {
-    if (editingTable) {
-      const updated = normTables.map(t => t.id === table.id ? table : t);
-      saveNormTables(updated);
-      toast.success('Таблица норм обновлена');
-    } else {
-      saveNormTables([...normTables, table]);
-      toast.success('Таблица норм создана');
+  const handleSaveTable = async (table: NormTable) => {
+    const savedId = await saveNormTable(table);
+    if (savedId) {
+      if (editingTable) {
+        toast.success('Таблица норм обновлена');
+      } else {
+        toast.success('Таблица норм создана');
+      }
+      setIsEditorOpen(false);
+      setEditingTable(null);
     }
-    setIsEditorOpen(false);
-    setEditingTable(null);
   };
 
-  const handleDeleteTable = (tableId: string) => {
-    const updated = normTables.filter(t => t.id !== tableId);
-    saveNormTables(updated);
-    toast.success('Таблица норм удалена');
+  const handleDeleteTable = async (tableId: string) => {
+    const success = await deleteNormTable(tableId);
+    if (success) {
+      toast.success('Таблица норм удалена');
+    }
   };
 
-  const handleResetToDefaults = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    reloadNormTables();
+  const handleResetToDefaults = async () => {
+    localStorage.removeItem('norms_tables_migrated');
+    await loadNormTables();
     toast.success('Таблицы норм сброшены до начальных значений');
   };
 

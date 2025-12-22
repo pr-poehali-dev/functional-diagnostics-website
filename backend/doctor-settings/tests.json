@@ -1,9 +1,9 @@
 {
   "tests": [
     {
-      "name": "Get norms without auth",
+      "name": "Get norm tables without auth",
       "method": "GET",
-      "path": "/?doctor_id=1&type=norms&study_type=ecg",
+      "path": "/?doctor_id=1&type=norm_tables&study_type=ecg",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "string"
@@ -11,19 +11,33 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Save norm without auth",
+      "name": "Save norm table without auth",
       "method": "POST",
       "path": "/",
       "body": {
-        "action": "save_norm",
+        "action": "save_norm_table",
         "doctor_id": 1,
-        "study_type": "ecg",
-        "parameter_id": "hr",
-        "condition_type": "default",
-        "condition_value": "all",
-        "min_value": 60,
-        "max_value": 90
+        "table": {
+          "studyType": "ecg",
+          "category": "adult_male",
+          "parameter": "hr",
+          "normType": "age",
+          "rows": [],
+          "showInReport": true,
+          "conclusionBelow": "Брадикардия",
+          "conclusionAbove": "Тахикардия"
+        }
       },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Delete norm table without auth",
+      "method": "DELETE",
+      "path": "/?table_id=00000000-0000-0000-0000-000000000000",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "string"
