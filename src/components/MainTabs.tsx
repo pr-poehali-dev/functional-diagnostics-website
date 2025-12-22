@@ -86,7 +86,21 @@ const MainTabs = ({
   
   const handleECGParameterChange = (positionIndex: number, parameterId: string, value: string) => {
     const newPositions = [...ecgPositions];
-    newPositions[positionIndex].results[parameterId] = parseFloat(value) || 0;
+    const numValue = parseFloat(value) || 0;
+    newPositions[positionIndex].results[parameterId] = numValue;
+    
+    // Автоматически рассчитываем среднее значение для параметров с _min и _max
+    const baseParamId = parameterId.replace(/_min$|_max$/, '');
+    if (parameterId.endsWith('_min') || parameterId.endsWith('_max')) {
+      const minValue = newPositions[positionIndex].results[`${baseParamId}_min`] || 0;
+      const maxValue = newPositions[positionIndex].results[`${baseParamId}_max`] || 0;
+      
+      if (minValue > 0 && maxValue > 0) {
+        const average = Math.round((minValue + maxValue) / 2);
+        newPositions[positionIndex].results[baseParamId] = average;
+      }
+    }
+    
     setEcgPositions(newPositions);
   };
   return (

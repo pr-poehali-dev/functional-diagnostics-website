@@ -53,11 +53,25 @@ const ECGQuickInputModal = ({
 
   const handleValueChange = (positionIndex: number, paramId: string, value: string) => {
     const newPositions = [...localPositions];
-    newPositions[positionIndex].results[paramId] = parseFloat(value) || 0;
+    const numValue = parseFloat(value) || 0;
+    newPositions[positionIndex].results[paramId] = numValue;
+    
+    // Автоматически рассчитываем среднее значение для параметров с _min и _max
+    const baseParamId = paramId.replace(/_min$|_max$/, '');
+    if (paramId.endsWith('_min') || paramId.endsWith('_max')) {
+      const minValue = newPositions[positionIndex].results[`${baseParamId}_min`] || 0;
+      const maxValue = newPositions[positionIndex].results[`${baseParamId}_max`] || 0;
+      
+      if (minValue > 0 && maxValue > 0) {
+        const average = Math.round((minValue + maxValue) / 2);
+        newPositions[positionIndex].results[baseParamId] = average;
+      }
+    }
+    
     setLocalPositions(newPositions);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, positionIndex: number, paramId: string, field: 'min' | 'value' | 'max') => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, positionIndex: number, paramId: string, field: 'min' | 'max') => {
     if (e.key === 'Enter' || e.key === 'Tab' || e.key === ' ') {
       e.preventDefault();
       
@@ -67,8 +81,7 @@ const ECGQuickInputModal = ({
       let nextKey = '';
       
       if (field === 'min') {
-        nextKey = `${positionIndex}-${paramId}-value`;
-      } else if (field === 'value') {
+        // Переход от мин к макс
         nextKey = `${positionIndex}-${paramId}-max`;
       } else if (field === 'max') {
         const nextParamIndex = currentParamIndex + 1;
@@ -139,18 +152,7 @@ const ECGQuickInputModal = ({
                         value={position.results[`${param.id}_min`] || ''}
                         onChange={(e) => handleValueChange(positionIndex, `${param.id}_min`, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'min')}
-                        className="w-20 text-lg"
-                      />
-                      <span className="text-muted-foreground">—</span>
-                      <Input
-                        ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}-value`] = el)}
-                        type="number"
-                        step="0.1"
-                        placeholder="Значение"
-                        value={position.results[param.id] || ''}
-                        onChange={(e) => handleValueChange(positionIndex, param.id, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'value')}
-                        className="flex-1 text-lg"
+                        className="w-24 text-lg"
                       />
                       <span className="text-muted-foreground">—</span>
                       <Input
@@ -161,7 +163,17 @@ const ECGQuickInputModal = ({
                         value={position.results[`${param.id}_max`] || ''}
                         onChange={(e) => handleValueChange(positionIndex, `${param.id}_max`, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, positionIndex, param.id, 'max')}
-                        className="w-20 text-lg"
+                        className="w-24 text-lg"
+                      />
+                      <span className="text-muted-foreground">=</span>
+                      <Input
+                        ref={(el) => (inputRefs.current[`${positionIndex}-${param.id}-value`] = el)}
+                        type="number"
+                        step="0.1"
+                        placeholder="Среднее"
+                        value={position.results[param.id] || ''}
+                        disabled
+                        className="flex-1 text-lg bg-secondary"
                       />
                     </div>
                   </div>

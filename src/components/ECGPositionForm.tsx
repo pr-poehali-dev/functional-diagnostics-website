@@ -184,15 +184,7 @@ const ECGPositionForm = ({
                         placeholder="Мин"
                         value={position.results['hr_min'] || ''}
                         onChange={(e) => onParameterChange(index, 'hr_min', e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-muted-foreground">—</span>
-                      <Input
-                        type="number"
-                        placeholder="60-90"
-                        value={position.results['hr'] || ''}
-                        onChange={(e) => onParameterChange(index, 'hr', e.target.value)}
-                        className="flex-1"
+                        className="w-24"
                       />
                       <span className="text-muted-foreground">—</span>
                       <Input
@@ -200,7 +192,15 @@ const ECGPositionForm = ({
                         placeholder="Макс"
                         value={position.results['hr_max'] || ''}
                         onChange={(e) => onParameterChange(index, 'hr_max', e.target.value)}
-                        className="w-20"
+                        className="w-24"
+                      />
+                      <span className="text-muted-foreground">=</span>
+                      <Input
+                        type="number"
+                        placeholder="Среднее"
+                        value={position.results['hr'] || ''}
+                        disabled
+                        className="flex-1 bg-secondary"
                       />
                     </div>
                   </div>
@@ -216,15 +216,7 @@ const ECGPositionForm = ({
                         placeholder="Мин"
                         value={position.results['pq_min'] || ''}
                         onChange={(e) => onParameterChange(index, 'pq_min', e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-muted-foreground">—</span>
-                      <Input
-                        type="number"
-                        placeholder="120-200"
-                        value={position.results['pq'] || ''}
-                        onChange={(e) => onParameterChange(index, 'pq', e.target.value)}
-                        className="flex-1"
+                        className="w-24"
                       />
                       <span className="text-muted-foreground">—</span>
                       <Input
@@ -232,7 +224,15 @@ const ECGPositionForm = ({
                         placeholder="Макс"
                         value={position.results['pq_max'] || ''}
                         onChange={(e) => onParameterChange(index, 'pq_max', e.target.value)}
-                        className="w-20"
+                        className="w-24"
+                      />
+                      <span className="text-muted-foreground">=</span>
+                      <Input
+                        type="number"
+                        placeholder="Среднее"
+                        value={position.results['pq'] || ''}
+                        disabled
+                        className="flex-1 bg-secondary"
                       />
                     </div>
                   </div>
@@ -248,15 +248,7 @@ const ECGPositionForm = ({
                         placeholder="Мин"
                         value={position.results['qrs_min'] || ''}
                         onChange={(e) => onParameterChange(index, 'qrs_min', e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-muted-foreground">—</span>
-                      <Input
-                        type="number"
-                        placeholder="60-100"
-                        value={position.results['qrs'] || ''}
-                        onChange={(e) => onParameterChange(index, 'qrs', e.target.value)}
-                        className="flex-1"
+                        className="w-24"
                       />
                       <span className="text-muted-foreground">—</span>
                       <Input
@@ -264,7 +256,15 @@ const ECGPositionForm = ({
                         placeholder="Макс"
                         value={position.results['qrs_max'] || ''}
                         onChange={(e) => onParameterChange(index, 'qrs_max', e.target.value)}
-                        className="w-20"
+                        className="w-24"
+                      />
+                      <span className="text-muted-foreground">=</span>
+                      <Input
+                        type="number"
+                        placeholder="Среднее"
+                        value={position.results['qrs'] || ''}
+                        disabled
+                        className="flex-1 bg-secondary"
                       />
                     </div>
                   </div>
@@ -280,15 +280,7 @@ const ECGPositionForm = ({
                         placeholder="Мин"
                         value={position.results['qt_min'] || ''}
                         onChange={(e) => onParameterChange(index, 'qt_min', e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-muted-foreground">—</span>
-                      <Input
-                        type="number"
-                        placeholder="340-440"
-                        value={position.results['qt'] || ''}
-                        onChange={(e) => onParameterChange(index, 'qt', e.target.value)}
-                        className="flex-1"
+                        className="w-24"
                       />
                       <span className="text-muted-foreground">—</span>
                       <Input
@@ -296,7 +288,15 @@ const ECGPositionForm = ({
                         placeholder="Макс"
                         value={position.results['qt_max'] || ''}
                         onChange={(e) => onParameterChange(index, 'qt_max', e.target.value)}
-                        className="w-20"
+                        className="w-24"
+                      />
+                      <span className="text-muted-foreground">=</span>
+                      <Input
+                        type="number"
+                        placeholder="Среднее"
+                        value={position.results['qt'] || ''}
+                        disabled
+                        className="flex-1 bg-secondary"
                       />
                     </div>
                   </div>
