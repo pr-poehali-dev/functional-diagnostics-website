@@ -262,7 +262,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
   };
 
   const handleGenerateProtocol = async (signed: boolean = false) => {
-    if (!selectedStudy || !patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0) {
+    if (!selectedStudy || !patientData.name || !patientData.gender || !patientData.birthDate) {
       toast.error('Заполните все обязательные поля');
       return null;
     }
@@ -271,29 +271,58 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     const resultsMinMax: Record<string, { min?: number; max?: number }> = {};
     const parametersWithMinMax = ['hr', 'pq', 'qrs', 'qt'];
     
-    selectedStudy.parameters.forEach(param => {
-      const value = parseFloat(parameters[param.id]);
-      if (!isNaN(value)) {
-        results[param.id] = Math.round(value);
+    // Для ЭКГ собираем данные из первой позиции
+    if (selectedStudy.id === 'ecg' && ecgPositions.length > 0) {
+      const firstPosition = ecgPositions[0];
+      
+      parametersWithMinMax.forEach(paramId => {
+        const value = firstPosition.results[paramId];
+        const minVal = firstPosition.results[`${paramId}_min`];
+        const maxVal = firstPosition.results[`${paramId}_max`];
         
-        if (parametersWithMinMax.includes(param.id)) {
-          const minVal = parseFloat(parameters[`${param.id}_min`]);
-          const maxVal = parseFloat(parameters[`${param.id}_max`]);
+        if (value) {
+          results[paramId] = Math.round(value);
+        }
+        
+        if (minVal || maxVal) {
+          resultsMinMax[paramId] = {
+            min: minVal ? Math.round(minVal) : undefined,
+            max: maxVal ? Math.round(maxVal) : undefined,
+          };
+        }
+      });
+    } else {
+      // Для остальных типов исследований
+      selectedStudy.parameters.forEach(param => {
+        const value = parseFloat(parameters[param.id]);
+        if (!isNaN(value)) {
+          results[param.id] = Math.round(value);
           
-          if (!isNaN(minVal) || !isNaN(maxVal)) {
-            resultsMinMax[param.id] = {
-              min: !isNaN(minVal) ? Math.round(minVal) : undefined,
-              max: !isNaN(maxVal) ? Math.round(maxVal) : undefined,
-            };
+          if (parametersWithMinMax.includes(param.id)) {
+            const minVal = parseFloat(parameters[`${param.id}_min`]);
+            const maxVal = parseFloat(parameters[`${param.id}_max`]);
+            
+            if (!isNaN(minVal) || !isNaN(maxVal)) {
+              resultsMinMax[param.id] = {
+                min: !isNaN(minVal) ? Math.round(minVal) : undefined,
+                max: !isNaN(maxVal) ? Math.round(maxVal) : undefined,
+              };
+            }
           }
         }
-      }
-    });
+      });
+    }
+    
+    if (Object.keys(results).length === 0) {
+      toast.error('Заполните параметры исследования');
+      return null;
+    }
 
     console.log('💾 Создание протокола:', {
       results,
       resultsMinMax,
       parameters,
+      ecgPositions,
     });
 
     const protocol = {
@@ -304,6 +333,8 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
       resultsMinMax: Object.keys(resultsMinMax).length > 0 ? resultsMinMax : undefined,
       conclusion: conclusion || generateConclusion(),
       signed,
+      ecgPositionType: selectedStudy.id === 'ecg' ? ecgPositionType : undefined,
+      ecgPositions: selectedStudy.id === 'ecg' ? ecgPositions : undefined,
     };
 
     const createdId = await createProtocol(protocol);

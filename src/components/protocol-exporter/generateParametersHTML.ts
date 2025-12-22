@@ -55,11 +55,11 @@ export const generateParametersHTML = ({
       
       if (hasMinMax) {
         const minMaxText = minVal !== undefined && maxVal !== undefined 
-          ? `${Math.round(minVal)}-${Math.round(maxVal)}`
+          ? `${Math.round(minVal)}-${Math.round(maxVal)} ${param.unit}`
           : minVal !== undefined 
-          ? `от ${Math.round(minVal)}`
-          : `до ${Math.round(maxVal)}`;
-        minMaxDisplay = `<span style="color: #6b7280; font-size: 12px;">${minMaxText}</span>`;
+          ? `от ${Math.round(minVal)} ${param.unit}`
+          : `до ${Math.round(maxVal)} ${param.unit}`;
+        minMaxDisplay = `<span style="color: #374151; font-size: 14px;">${minMaxText}</span>`;
       }
 
       return `
