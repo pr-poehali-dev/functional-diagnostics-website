@@ -363,6 +363,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'message': 'Настройки ввода сохранены', 'id': settings_id}),
                     'isBase64Encoded': False
                 }
+            
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': f'Неизвестное действие: {action}'}),
+                'isBase64Encoded': False
+            }
         
         elif method == 'DELETE':
             params = event.get('queryStringParameters', {})
