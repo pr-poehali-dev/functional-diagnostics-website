@@ -261,6 +261,8 @@ const MainTabs = ({
                 positions={ecgPositions}
                 onPositionsChange={setEcgPositions}
                 onParameterChange={handleECGParameterChange}
+                patientData={patientData}
+                normTables={normTables}
               />
             ) : (
               <StudyParametersForm

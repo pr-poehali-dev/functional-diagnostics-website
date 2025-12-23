@@ -1,8 +1,15 @@
-import { ECGPositionData, ECG_POSITION_LABELS, ECG_RHYTHMS, ECG_AXIS } from '@/types/medical';
+import { ECGPositionData, ECG_POSITION_LABELS, ECG_RHYTHMS, ECG_AXIS, PatientData } from '@/types/medical';
+import { NormTable } from '@/types/norms';
+import { checkParameterNorms, getAllParameterChecks, generateConclusionFromNorms } from './normsChecker';
 
-export const generateECGConclusion = (positions: ECGPositionData[]): string => {
+export const generateECGConclusion = (
+  positions: ECGPositionData[], 
+  patientData?: PatientData, 
+  normTables?: NormTable[]
+): string => {
   const conclusions: string[] = [];
 
+  // Основная часть - позиции и ритм
   positions.forEach((position) => {
     const positionLabel = ECG_POSITION_LABELS[position.position];
     
@@ -30,6 +37,50 @@ export const generateECGConclusion = (positions: ECGPositionData[]): string => {
 
     conclusions.push(conclusionText);
   });
+
+  // Если есть данные пациента и нормативные таблицы, добавляем анализ параметров
+  if (patientData && normTables && positions.length > 0) {
+    const firstPosition = positions[0];
+    const parameters: Record<string, number> = {};
+    const parameterNames: Record<string, string> = {
+      hr: 'ЧСС',
+      pq: 'PQ интервал',
+      qrs: 'QRS комплекс',
+      qt: 'QT интервал',
+    };
+    
+    // Собираем параметры для проверки (только средние значения)
+    ['hr', 'pq', 'qrs', 'qt'].forEach(paramId => {
+      if (firstPosition.results[paramId]) {
+        parameters[paramId] = firstPosition.results[paramId];
+      }
+    });
+    
+    if (Object.keys(parameters).length > 0) {
+      // Проверяем параметры по нормам
+      const checks = getAllParameterChecks(parameters, patientData, normTables, 'ecg');
+      
+      // Собираем min-max данные для отображения в заключении
+      const resultsMinMax: Record<string, { min?: number; max?: number }> = {};
+      ['hr', 'pq', 'qrs', 'qt'].forEach(paramId => {
+        const minVal = firstPosition.results[`${paramId}_min`];
+        const maxVal = firstPosition.results[`${paramId}_max`];
+        if (minVal || maxVal) {
+          resultsMinMax[paramId] = {
+            min: minVal,
+            max: maxVal,
+          };
+        }
+      });
+      
+      // Генерируем заключение на основе норм
+      const normsConclusion = generateConclusionFromNorms(checks, parameters, parameterNames, resultsMinMax);
+      if (normsConclusion) {
+        conclusions.push('');
+        conclusions.push(normsConclusion);
+      }
+    }
+  }
 
   return conclusions.join('\n\n');
 };

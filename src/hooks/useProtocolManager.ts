@@ -189,7 +189,7 @@ export const useProtocolManager = (authToken: string | null, normTables: NormTab
     
     // Для ЭКГ используем специальную логику с позициями
     if (selectedStudy.id === 'ecg') {
-      return generateECGConclusion(ecgPositions);
+      return generateECGConclusion(ecgPositions, patientData, normTables);
     }
     
     const numericParams: Record<string, number> = {};

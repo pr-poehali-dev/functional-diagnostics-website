@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
-import { ECG_POSITION_TYPES, ECG_RHYTHMS, ECG_AXIS, ECG_POSITION_LABELS, ECGPositionType, ECGPositionData, studyTypes } from '@/types/medical';
+import { ECG_POSITION_TYPES, ECG_RHYTHMS, ECG_AXIS, ECG_POSITION_LABELS, ECGPositionType, ECGPositionData, studyTypes, PatientData } from '@/types/medical';
+import { NormTable } from '@/types/norms';
+import { checkParameterNorms } from '@/utils/normsChecker';
 import { useState } from 'react';
 
 type ECGPositionFormProps = {
@@ -13,6 +15,8 @@ type ECGPositionFormProps = {
   positions: ECGPositionData[];
   onPositionsChange: (positions: ECGPositionData[]) => void;
   onParameterChange: (positionIndex: number, parameterId: string, value: string) => void;
+  patientData: PatientData;
+  normTables: NormTable[];
 };
 
 const ECGPositionForm = ({
@@ -21,7 +25,41 @@ const ECGPositionForm = ({
   positions,
   onPositionsChange,
   onParameterChange,
+  patientData,
+  normTables,
 }: ECGPositionFormProps) => {
+  const getParameterNorm = (paramId: string, value: number) => {
+    if (!patientData.age || !value) return null;
+    return checkParameterNorms(paramId, value, patientData, normTables, 'ecg');
+  };
+  
+  const getStatusBadge = (paramId: string, value: number) => {
+    const normCheck = getParameterNorm(paramId, value);
+    if (!normCheck || !normCheck.normRange) return null;
+    
+    const { min, max } = normCheck.normRange;
+    const statusColors = {
+      normal: 'default',
+      borderline_low: 'secondary',
+      borderline_high: 'secondary',
+      below: 'destructive',
+      above: 'destructive',
+    };
+    
+    const statusTexts = {
+      normal: '✓ Норма',
+      borderline_low: '⚠ Ниже нормы',
+      borderline_high: '⚠ Выше нормы',
+      below: '✗ Ниже нормы',
+      above: '✗ Выше нормы',
+    };
+    
+    return {
+      norm: `${Math.round(min)}-${Math.round(max)}`,
+      status: statusTexts[normCheck.status],
+      variant: statusColors[normCheck.status] as 'default' | 'secondary' | 'destructive',
+    };
+  };
   const getPositionsForType = (type: ECGPositionType): ECGPositionData['position'][] => {
     switch (type) {
       case 'lying':
@@ -179,17 +217,19 @@ const ECGPositionForm = ({
                   <div className="flex items-center justify-between">
                     <Label>ЧСС (уд/мин)</Label>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        Норма: 60-90
-                      </Badge>
-                      {position.results['hr'] && (
-                        <Badge 
-                          variant={position.results['hr'] >= 60 && position.results['hr'] <= 90 ? 'default' : 'destructive'}
-                          className="text-xs"
-                        >
-                          {position.results['hr'] >= 60 && position.results['hr'] <= 90 ? '✓ Норма' : '⚠ Отклонение'}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const badge = position.results['hr'] ? getStatusBadge('hr', position.results['hr']) : null;
+                        return badge ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              Норма: {badge.norm}
+                            </Badge>
+                            <Badge variant={badge.variant} className="text-xs">
+                              {badge.status}
+                            </Badge>
+                          </>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -226,17 +266,19 @@ const ECGPositionForm = ({
                   <div className="flex items-center justify-between">
                     <Label>PQ интервал (мс)</Label>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        Норма: 120-200
-                      </Badge>
-                      {position.results['pq'] && (
-                        <Badge 
-                          variant={position.results['pq'] >= 120 && position.results['pq'] <= 200 ? 'default' : 'destructive'}
-                          className="text-xs"
-                        >
-                          {position.results['pq'] >= 120 && position.results['pq'] <= 200 ? '✓ Норма' : '⚠ Отклонение'}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const badge = position.results['pq'] ? getStatusBadge('pq', position.results['pq']) : null;
+                        return badge ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              Норма: {badge.norm}
+                            </Badge>
+                            <Badge variant={badge.variant} className="text-xs">
+                              {badge.status}
+                            </Badge>
+                          </>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -273,17 +315,19 @@ const ECGPositionForm = ({
                   <div className="flex items-center justify-between">
                     <Label>QRS комплекс (мс)</Label>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        Норма: 60-100
-                      </Badge>
-                      {position.results['qrs'] && (
-                        <Badge 
-                          variant={position.results['qrs'] >= 60 && position.results['qrs'] <= 100 ? 'default' : 'destructive'}
-                          className="text-xs"
-                        >
-                          {position.results['qrs'] >= 60 && position.results['qrs'] <= 100 ? '✓ Норма' : '⚠ Отклонение'}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const badge = position.results['qrs'] ? getStatusBadge('qrs', position.results['qrs']) : null;
+                        return badge ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              Норма: {badge.norm}
+                            </Badge>
+                            <Badge variant={badge.variant} className="text-xs">
+                              {badge.status}
+                            </Badge>
+                          </>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -320,17 +364,19 @@ const ECGPositionForm = ({
                   <div className="flex items-center justify-between">
                     <Label>QT интервал (мс)</Label>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        Норма: 340-440
-                      </Badge>
-                      {position.results['qt'] && (
-                        <Badge 
-                          variant={position.results['qt'] >= 340 && position.results['qt'] <= 440 ? 'default' : 'destructive'}
-                          className="text-xs"
-                        >
-                          {position.results['qt'] >= 340 && position.results['qt'] <= 440 ? '✓ Норма' : '⚠ Отклонение'}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const badge = position.results['qt'] ? getStatusBadge('qt', position.results['qt']) : null;
+                        return badge ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              Норма: {badge.norm}
+                            </Badge>
+                            <Badge variant={badge.variant} className="text-xs">
+                              {badge.status}
+                            </Badge>
+                          </>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="flex gap-2">
