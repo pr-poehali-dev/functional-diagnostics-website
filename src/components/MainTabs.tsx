@@ -273,7 +273,7 @@ const MainTabs = ({
               />
             )}
 
-            {Object.keys(parameters).length > 0 && (
+            {(Object.keys(parameters).length > 0 || (selectedStudy.id === 'ecg' && ecgPositions.length > 0 && ecgPositions[0].results['hr'])) && (
               <Card className="bg-primary/5 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -307,7 +307,15 @@ const MainTabs = ({
               className="w-full"
               size="lg"
               onClick={handleGenerateProtocol}
-              disabled={!patientData.name || !patientData.gender || !patientData.birthDate || Object.keys(parameters).length === 0}
+              disabled={
+                !patientData.name || 
+                !patientData.gender || 
+                !patientData.birthDate || 
+                (selectedStudy.id === 'ecg' 
+                  ? ecgPositions.length === 0 || !ecgPositions[0].results['hr']
+                  : Object.keys(parameters).length === 0
+                )
+              }
             >
               <Icon name="FileCheck" size={20} className="mr-2" />
               Сформировать протокол

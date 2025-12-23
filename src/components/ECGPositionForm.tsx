@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
-import { ECG_POSITION_TYPES, ECG_RHYTHMS, ECG_AXIS, ECG_POSITION_LABELS, ECGPositionType, ECGPositionData } from '@/types/medical';
+import { ECG_POSITION_TYPES, ECG_RHYTHMS, ECG_AXIS, ECG_POSITION_LABELS, ECGPositionType, ECGPositionData, studyTypes } from '@/types/medical';
 import { useState } from 'react';
 
 type ECGPositionFormProps = {
@@ -176,7 +176,22 @@ const ECGPositionForm = ({
               <div className="space-y-4">
                 {/* ЧСС */}
                 <div className="space-y-2">
-                  <Label>ЧСС (уд/мин)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>ЧСС (уд/мин)</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Норма: 60-90
+                      </Badge>
+                      {position.results['hr'] && (
+                        <Badge 
+                          variant={position.results['hr'] >= 60 && position.results['hr'] <= 90 ? 'default' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {position.results['hr'] >= 60 && position.results['hr'] <= 90 ? '✓ Норма' : '⚠ Отклонение'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="flex-1 flex gap-2 items-center">
                       <Input
@@ -208,7 +223,22 @@ const ECGPositionForm = ({
 
                 {/* PQ */}
                 <div className="space-y-2">
-                  <Label>PQ интервал (мс)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>PQ интервал (мс)</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Норма: 120-200
+                      </Badge>
+                      {position.results['pq'] && (
+                        <Badge 
+                          variant={position.results['pq'] >= 120 && position.results['pq'] <= 200 ? 'default' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {position.results['pq'] >= 120 && position.results['pq'] <= 200 ? '✓ Норма' : '⚠ Отклонение'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="flex-1 flex gap-2 items-center">
                       <Input
@@ -240,7 +270,22 @@ const ECGPositionForm = ({
 
                 {/* QRS */}
                 <div className="space-y-2">
-                  <Label>QRS комплекс (мс)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>QRS комплекс (мс)</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Норма: 60-100
+                      </Badge>
+                      {position.results['qrs'] && (
+                        <Badge 
+                          variant={position.results['qrs'] >= 60 && position.results['qrs'] <= 100 ? 'default' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {position.results['qrs'] >= 60 && position.results['qrs'] <= 100 ? '✓ Норма' : '⚠ Отклонение'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="flex-1 flex gap-2 items-center">
                       <Input
@@ -272,7 +317,22 @@ const ECGPositionForm = ({
 
                 {/* QT */}
                 <div className="space-y-2">
-                  <Label>QT интервал (мс)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>QT интервал (мс)</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Норма: 340-440
+                      </Badge>
+                      {position.results['qt'] && (
+                        <Badge 
+                          variant={position.results['qt'] >= 340 && position.results['qt'] <= 440 ? 'default' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {position.results['qt'] >= 340 && position.results['qt'] <= 440 ? '✓ Норма' : '⚠ Отклонение'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="flex-1 flex gap-2 items-center">
                       <Input
