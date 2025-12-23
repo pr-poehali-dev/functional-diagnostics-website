@@ -28,9 +28,36 @@ const ECGPositionForm = ({
   patientData,
   normTables,
 }: ECGPositionFormProps) => {
+  const calculateAge = (birthDate: string) => {
+    if (!birthDate) return null;
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    let days = today.getDate() - birth.getDate();
+    
+    if (days < 0) {
+      months--;
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += lastMonth.getDate();
+    }
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    return { years, months, days };
+  };
+
   const getParameterNorm = (paramId: string, value: number) => {
-    if (!patientData.age || !value) return null;
-    return checkParameterNorms(paramId, value, patientData, normTables, 'ecg');
+    if (!patientData.birthDate || !value) return null;
+    
+    const age = calculateAge(patientData.birthDate);
+    if (!age) return null;
+    
+    const patientWithAge = { ...patientData, age };
+    return checkParameterNorms(paramId, value, patientWithAge, normTables, 'ecg');
   };
   
   const getStatusBadge = (paramId: string, value: number) => {
