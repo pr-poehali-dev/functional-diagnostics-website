@@ -65,26 +65,35 @@ const ECGPositionForm = ({
     if (!normCheck || !normCheck.normRange) return null;
     
     const { min, max } = normCheck.normRange;
-    const statusColors = {
-      normal: 'default',
-      borderline_low: 'secondary',
-      borderline_high: 'secondary',
-      below: 'destructive',
-      above: 'destructive',
+    const statusConfig = {
+      normal: {
+        text: '✓ Норма',
+        className: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200',
+      },
+      borderline_low: {
+        text: '⚠ Ниже нормы',
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200',
+      },
+      borderline_high: {
+        text: '⚠ Выше нормы',
+        className: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200',
+      },
+      below: {
+        text: '✗ Ниже нормы',
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200',
+      },
+      above: {
+        text: '✗ Выше нормы',
+        className: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200',
+      },
     };
     
-    const statusTexts = {
-      normal: '✓ Норма',
-      borderline_low: '⚠ Ниже нормы',
-      borderline_high: '⚠ Выше нормы',
-      below: '✗ Ниже нормы',
-      above: '✗ Выше нормы',
-    };
+    const config = statusConfig[normCheck.status];
     
     return {
       norm: `${Math.round(min)}-${Math.round(max)}`,
-      status: statusTexts[normCheck.status],
-      variant: statusColors[normCheck.status] as 'default' | 'secondary' | 'destructive',
+      status: config.text,
+      className: config.className,
     };
   };
   const getPositionsForType = (type: ECGPositionType): ECGPositionData['position'][] => {
@@ -251,7 +260,7 @@ const ECGPositionForm = ({
                             <Badge variant="outline" className="text-xs">
                               Норма: {badge.norm}
                             </Badge>
-                            <Badge variant={badge.variant} className="text-xs">
+                            <Badge className={`text-xs ${badge.className}`}>
                               {badge.status}
                             </Badge>
                           </>
@@ -300,7 +309,7 @@ const ECGPositionForm = ({
                             <Badge variant="outline" className="text-xs">
                               Норма: {badge.norm}
                             </Badge>
-                            <Badge variant={badge.variant} className="text-xs">
+                            <Badge className={`text-xs ${badge.className}`}>
                               {badge.status}
                             </Badge>
                           </>
@@ -349,7 +358,7 @@ const ECGPositionForm = ({
                             <Badge variant="outline" className="text-xs">
                               Норма: {badge.norm}
                             </Badge>
-                            <Badge variant={badge.variant} className="text-xs">
+                            <Badge className={`text-xs ${badge.className}`}>
                               {badge.status}
                             </Badge>
                           </>
@@ -398,7 +407,7 @@ const ECGPositionForm = ({
                             <Badge variant="outline" className="text-xs">
                               Норма: {badge.norm}
                             </Badge>
-                            <Badge variant={badge.variant} className="text-xs">
+                            <Badge className={`text-xs ${badge.className}`}>
                               {badge.status}
                             </Badge>
                           </>
